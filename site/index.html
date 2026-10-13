@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agreement Machinery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css?v=16">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="mast">
+      <div>
+        <p class="kicker">An Independent Study and Thesis Project</p>
+        <h1 class="brand" data-go="introduction">Agreement Machinery</h1>
+      </div>
+      <nav class="tabs">
+        <a data-tab="machinery" class="on" data-go="introduction">The Machinery</a>
+        <a data-tab="encyclopedia" data-go="encyclopedia">The Encyclopedia</a>
+        <a data-tab="bibliography" data-go="bibliography">Bibliography</a>
+        <a data-tab="about" data-go="about">About</a>
+      </nav>
+    </div>
+  </div>
+</header>
+<div class="toolbarbar">
+  <div class="wrap">
+    <div class="toolbar">
+      <div class="pill" id="sidemode">
+        <button data-mode="order" class="on">Reading Order</button>
+        <button data-mode="cat">By Category</button>
+      </div>
+      <button class="menubtn" id="menubtn">☰ Contents</button>
+      <input class="search" id="search" placeholder="probe in one direction or another…">
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+<div class="layout">
+  <aside class="side" id="side"></aside>
+  <main id="pages">
+  <div id="loading" class="loading">opening the machinery…</div>
+
+  <section class="page" data-page="encyclopedia"><div class="single shelf">
+    <h1 class="title">The Encyclopedia</h1>
+    <div class="meta" id="enc-meta"></div>
+    <div class="enc-tools">
+      <input class="search enc-search" id="enc-q" placeholder="specify ahead…">
+      <div class="enc-feats" id="enc-feats"></div>
+    </div>
+    <div class="stack-head" id="stack-head">
+      <button data-k="name">Phenomenon</button><button data-k="lang">Language</button><button data-k="probe">Probe</button>
+      <button data-k="goal">Goal</button><button data-k="feats">Features</button><button data-k="block">Blockers</button>
+    </div>
+    <div class="stack" id="stack"></div>
+    <svg class="plank" id="plank" viewBox="0 0 1000 18" preserveAspectRatio="none"></svg>
+    <div class="legend" id="enc-legend"></div>
+  </div></section>
+
+  <section class="page" data-page="phen"><div class="single">
+    <p class="crumb"><a class="back" data-go="encyclopedia">← The Encyclopedia</a></p>
+    <h1 class="title" id="ph-title"></h1>
+    <div class="meta" id="ph-meta"></div>
+    <div class="card" id="ph-card"></div>
+    <article id="ph-body"></article>
+    <div class="chapnav" id="ph-nav"></div>
+  </div></section>
+
+  <section class="page" data-page="bibliography"><div class="single">
+    <h1 class="title">Bibliography</h1>
+    <div class="meta" id="bib-meta"></div>
+    <ul class="bib" id="bib-list"></ul>
+  </div></section>
+
+  <section class="page" data-page="about"><div class="single">
+    <h1 class="title">About</h1>
+    <div class="meta">built from LaTeX sources</div>
+    <article><p>An independent study and thesis project on the syntax of agreement, published chapter by chapter from its LaTeX sources.
+      Numbered examples are typeset from <i>expex</i>, trees from <i>forest</i>, diagrams from <i>TikZ</i>, and footnotes and marginal comments are set
+      beside the text rather than at the bottom of a page.</p></article>
+  </div></section>
+
+  <section class="page" data-page="stub"><div class="single">
+    <p class="crumb" id="stub-crumb"></p><h1 class="title" id="stub-title"></h1>
+    <div class="meta">not drafted</div>
+    <div class="placeholder" id="stub-msg"></div>
+  </div></section>
+  </main>
+</div>
+</div>
+
+<div class="pop" id="pop"></div>
+<button class="sidetog left" id="togleft" title="Toggle contents"><svg viewBox="0 0 20 16"><rect x="1" y="1" width="18" height="14" rx="1.5"/><rect class="fill" x="1" y="1" width="6" height="14"/></svg></button>
+<button class="sidetog right" id="togright" title="Toggle notes"><svg viewBox="0 0 20 16"><rect x="1" y="1" width="18" height="14" rx="1.5"/><rect class="fill" x="13" y="1" width="6" height="14"/></svg></button>
+
+<script src="js/latex.js?v=16"></script>
+<script src="js/diagrams.js?v=16"></script>
+<script src="js/code.js?v=16"></script>
+<script src="js/app.js?v=16"></script>
+</body>
+</html>

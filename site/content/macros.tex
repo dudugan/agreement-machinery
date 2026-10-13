@@ -1,0 +1,57 @@
+% =====================================================================
+%  Macros for Agreement Machinery
+%  Every \newcommand here is read by the site and expanded exactly as
+%  LaTeX would. Edit freely; you can also paste your whole preamble in.
+% =====================================================================
+
+% ---------- from the manuscript preamble ----------
+\newcommand{\Next}[1][]{(\nextx#1)\xspace}
+\newcommand{\Last}[1][]{(\lastx#1)\xspace}
+\newcommand{\NNext}[1][]{(\anextx#1)\xspace}
+\newcommand{\LLast}[1][]{(\blastx#1)\xspace}
+\newcommand{\LLLast}[1][]{(\bblastx#1)\xspace}
+
+\newcommand{\gref}[2][]{(\getref{#2}#1)\xspace}
+\newcommand{\dref}[1]{\deftagex{#1}}
+
+\newcommand{\nothing}{$\emptyset$}
+
+\newcommand{\Lb}[1]{$\text{[}_{\text{#1}}$ }
+\newcommand{\Rb}[1]{$\text{]}_{\text{#1}}$ }
+\newcommand{\1}{\rlap{$'$}\xspace}
+\newcommand{\0}{\rlap{\textsuperscript{$ˆ{\circ}$}}\xspace}
+\newcommand{\gap}{\underline{\hspace{1.2em}}}
+\newcommand{\vP}{\emph{v}P\xspace}
+\newcommand{\lv}{\emph{v}\xspace}
+\newcommand{\Abar}{A$'$-}
+\newcommand{\pro}{\emph{pro}\xspace}
+\newcommand{\subs}[1]{\textsubscript{#1}}
+\newcommand{\supers}[1]{\textsuperscript{#1}}
+\newcommand{\spells}{$\Longleftrightarrow$} % spellout
+\newcommand{\tr}[1]{\textit{t}\textsubscript{\textit{#1}}}
+\newcommand{\tht}{$\theta$}
+\newcommand{\nt}{$\varnothing$}
+\newcommand{\lb}{$\llbracket$}
+\newcommand{\rb}{$\rrbracket$}
+
+\newcommand{\ph}{$\phi$\xspace}
+\newcommand{\gm}{$\gamma$\xspace}
+\newcommand{\<}{$\langle$}
+\renewcommand{\>}{$\rangle$}
+
+% ---------- inferred from usage: check these against your preamble ----------
+\newcommand{\rt}[1]{$\sqrt{\text{#1}}$}   % a root:  \rt{tpz} → √tpz
+\newcommand{\sca}[1]{\textsc{#1}}         % small caps on an attached morpheme (\sca{def}-sea)
+\newcommand{\xm}{\ding{55}}               % ✗ marks a blocked dependency
+\newcommand{\round}[1]{(#1)}              % parenthesised label on an arrow: \round{@PF} → (@PF)
+
+% ---------- site helpers (safe to use in LaTeX too, with the definitions below) ----------
+% a feature bundle printed small under a tree node:   [T\feat{u\ph: \_\_}]
+% (\textfeat is built into the site; for PDF output define it as e.g. {\scriptsize\texttt{#1}})
+\newcommand{\feat}[1]{\\\textfeat{#1}}
+% \headchain{ C (you) [*T *Aux Vc]{should} [V]{eat} }
+%   bare head        a head with no chain line
+%   [a *b c]{word}   a head chain; its lines meet under the starred head(s) (default: the first),
+%                    where the chain's morphology is pronounced as {word}
+%   (word)           an ordinary word on the bottom line
+% (For PDF output, \headchain needs its own TikZ definition; the site draws it natively.)

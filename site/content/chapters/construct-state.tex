@@ -1,0 +1,100 @@
+%% title: The Semitic Construct State
+%% category: languages
+
+\begin{abstract}
+Across Semitic, a noun followed by a possessor appears in a reduced ``construct'' form. We treat the construct state as a head chain that pronounces the noun in D, and show how the same chain explains the position of the definite article.
+\end{abstract}
+\label{ch:construct}
+
+\section{The pattern}\label{sec:construct-pattern}
+
+The construct state is found in Akkadian, Arabic and Hebrew alike \Next. The head noun loses its own definiteness marking, and definiteness is instead marked once, on the possessor, as in \gref[b]{first} and \gref[c]{first}.
+
+{\onehalfspacing
+\columnratio{0.25}
+\begin{paracol}{3}
+
+\ex a. \begingl \dref{first}
+\gla maːr-uː damq-im //
+\glb son-\sc{pl} good-\sc{gen} //
+\glft `noblemen' (Ak) // \endgl
+
+\switchcolumn
+
+\vspace{0.8mm}
+b. \begingl
+\gla ħuːriyː-a-ːt-u l-baħr-i //
+\glb nymph-\sc{f}-\sc{pl}-\sc{nom} \sca{def}-sea-\sc{gen} //
+\glft `the mermaids' (Ar) // \endgl
+
+\switchcolumn
+
+\vspace{0.8mm} c. \begingl
+    \gla bat-ey ha-xol-im //
+    \glb house-\sc{pl} \sca{def}-patient-\sc{pl} //
+    \glft `the hospitals' (Hb) // \endgl \xe
+
+\end{paracol}}
+
+The analysis goes back at least to \citet{ritter1991}, who argues that the construct noun raises to D; \citet{benmamoun2000} extends it to the Arabic dialects.\footnote{The Akkadian form is cited in its Old Babylonian spelling; vowel length is marked with ː throughout.}
+
+\section{The structure}\label{sec:construct-tree}
+
+In \textit{mits ha-tapuzim} `the orange juice', the noun \textit{mits} is pronounced in D, above the possessor, while its root is merged low, inside PossP \Next. The arrow marks the chain's pronunciation site at PF.
+
+\ex \dref{mits}
+\begin{forest}for tree={l sep=0.4cm,
+    s sep=0.1cm}
+    [DP
+        [D
+            [Poss
+                [\dots \\ \textit{n}\subs{1}
+                    [\rt{mi\d{s}} \\ \textbf{\textit{mits}}, name=mits2]
+                    [\textit{n}\subs{1}, name=n11]]
+                [Poss]]
+            [D \\ \textbf{\textit{ha}}]]
+        [PossP
+            [KP
+                [K
+                        [Cl
+                            [\textit{n}\subs{2}
+                                [\rt{tpz} \\ \textbf{\textit{tapuz}}, name=tpz2]
+                                [\textit{n}\subs{2}, name=n22]]
+                            [Cl \\ \textbf{\textit{im}}, name=cl11]]
+                        [K]]
+                [ClP
+                    [Cl, name=cl1]
+                    [\textit{n}P\subs{2}
+                        [\textit{n}\subs{2}, name=n2]
+                        [\rt{tpz}, name=tpz1]]]]
+            [Poss\1
+                [Poss, name=poss1]
+                [\dots \\ \textit{n}P\subs{1}
+                    [\textit{n}\subs{1}, name=n1]
+                    [\rt{mi\d{s}}, name=mits1]]]]]
+    \draw[-] (mits1) to[out=south, in=south] (n1);
+    \draw[-] (n1) to[out=south, in=south, looseness=1.8] (poss1);
+    \draw[->] (poss1) to[out=south, in=south east, looseness=1.4] node[below=34pt,pos=0.10]{\round{@\textit{PF}}} (mits2);
+    \draw[-] (tpz1) to[out=south, in=south] (n2);
+    \draw[-] (n2) to[out=south, in=south, looseness=1.8] (cl1);
+    \draw[->] (cl1) to[out=south, in=south east] (cl11);
+\end{forest}
+\xe
+
+\section{Copular clauses}\label{sec:construct-copula}
+
+The same chain mechanics extend to Arabic copular clauses with \textit{k\={a}na}, where the copula agrees with both members of an equative small clause \Next.\comment{Do we need two arrows here, or does the second follow from the first?}
+
+\ex \begin{forest}
+[\vP
+    [\lv \\ k\={a}na, name=v]
+    [EqP
+        [DP\subs{2}, name=D2 [Y\={a}s\={i}n, roof]]
+        [Eq\1
+            [Eq]
+            [DP\subs{1}, name=D1 [l-muʕallim, roof]]]]]
+\draw[->, thick] (v) to[out=east, in=north west] ([yshift=-8pt, xshift=-15pt]D1);
+% \draw[->, thick] (v) to[out=south, in=west, out min distance=60pt] ([xshift=-30pt, yshift=-10pt]D1);
+\draw[->, thick] (v) to[out=south, in=west] ([yshift=-8pt, xshift=-15pt]D2);
+\end{forest}
+\xe

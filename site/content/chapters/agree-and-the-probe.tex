@@ -1,0 +1,58 @@
+%% title: Agree and the Probe
+%% category: theories
+
+\begin{abstract}
+This chapter sets out the basic mechanism assumed throughout: an unvalued head searches downward for the closest matching goal and copies its values. We look at what counts as \emph{closest}, what happens when the closest thing is the wrong kind of thing, and how fine-grained a probe's search can be.
+\end{abstract}
+\label{ch:agree}
+
+\section{The basic configuration}\label{sec:basic}
+
+Agreement is the clearest case in natural language of a dependency that is both obligatory and asymmetric\footnote{Asymmetric in the sense that only one side of the relation is semantically interpreted. Gender on adjectives is the clearest case.}: one element carries features it does not interpret, and must obtain their values from another element that does. Following \citet{chomsky2000,chomsky2001}, this asymmetry is encoded directly. A head bearing unvalued \ph-features (the \emph{probe}) searches its c-command domain for the closest bearer of valued \ph-features (the \emph{goal}) and copies their values.
+
+\pex \dref{attraction}
+  \a The keys to the cabinet \textbf{are} on the table.
+  \a *The keys to the cabinet \textbf{is} on the table.
+  \a \% The key to the cabinets \textbf{are} on the table.
+\xe
+
+The contrast in \gref[a--b]{attraction} is the familiar one. \gref[c]{attraction} is more interesting: speakers produce it and often accept it, an \emph{attraction} effect documented since \citet{bock1991}. We return to it in Chapter~\ref{ch:attraction}. For now it is a reminder that the closest goal in linear terms is not always the closest in structural terms.\footnote{Attraction is sensitive to hierarchical depth: a PP-embedded noun attracts more than a relative-clause-embedded one.}
+
+\ex \dref{agree-tree}
+\begin{forest}
+[TP
+  [T\feat{u\ph: \_\_}, name=probe]
+  [\vP
+    [DP\feat{3 · pl}, name=goal
+      [D \\ \textit{the}]
+      [NP \\ \textit{keys}]]
+    [\lv\1
+      [\lv]
+      [VP
+        [V \\ \textit{be}]
+        [PP [\textit{on the table}, roof]]]]]]
+\draw[->, dashed, blue] (probe) to[out=south, in=west] node[pos=.42, below left, text=blue]{\textit{Agree}} (goal);
+\end{forest}
+\xe
+
+In \gref{agree-tree}, T is merged with an unvalued set of \ph-features, written u\ph: \_\_. Its search domain is its sister, \vP. The first DP it encounters is the external argument in Spec,\vP,\comment{Is Spec,\vP visible to T before the \lv-phase is complete? Cross-check with the PIC discussion in Chapter~\ref{ch:features}.} which bears [3, pl]. These values are copied onto T, which is then spelled out as \textit{are}. Only after valuation does the subject raise to Spec,TP. That ordering matters later, when we ask whether movement can feed agreement.
+
+\section{Locality and intervention}\label{sec:intervention}
+
+Because search proceeds top-down, a goal closer to the probe blocks agreement with one further away. This \emph{defective intervention} is most visible in Icelandic experiencer constructions, where a dative sits between T and a nominative:\footnote{The judgment holds for most speakers in the expletive construction. When the dative raises, plural agreement becomes available.}
+
+\ex \dref{icelandic}
+\begingl
+\gla Það virðist/*virðast einhverjum~manni [hestarnir vera seinir] //
+\glb \sc{expl} seem.\sc{sg}/seem.\sc{pl} some~man.\sc{dat} the.horses.\sc{nom} be slow //
+\glft `It seems to some man that the horses are slow.' \citep{holmberg2003} //
+\endgl
+\xe
+
+The dative is close enough to stop the probe but, being inherently case-marked, cannot value it, and T surfaces with default singular morphology. \citet{preminger2014} argues that this is not a crash but a legitimate outcome: the probe fails, and the derivation goes on.\footnote{On this view, default morphology is what an unvalued probe sounds like, not a separate rule.}
+
+\section{What the probe is looking for}\label{sec:relativized}
+
+If probes are relativized to particular features, intervention should be selective. A probe searching only for [participant] should skip third-person DPs entirely and agree with a lower first- or second-person goal. This is the core insight of \citet{bejar2009}. We develop the relativized view in Chapter~\ref{ch:features} and test it against long-distance agreement\comment{Draft: decide whether to adopt \emph{upward} Agree \citep{zeijlstra2012} for concord. If so, the tree in \gref{agree-tree} changes.} in Section~\ref{sec:lda-restructuring}, where the goal sits inside an infinitival complement, as in \gref[a]{hu-lda}.
+
+Throughout, I write \ph\footnote{As shorthand for person, number, and gender, without claiming that they form a natural class.} for the bundle that T and \lv probe for. The examples so far make the probe look like a single, indivisible searcher. The rest of the book argues against that picture.

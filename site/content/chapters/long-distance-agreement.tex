@@ -1,0 +1,48 @@
+%% title: Long-Distance Agreement
+%% category: phenomena
+
+\begin{abstract}
+In Hindi-Urdu, a matrix verb can agree with the object of an embedded infinitive. We argue this is ordinary downward Agree (Section~\ref{sec:basic}) operating across an unusually small complement.
+\end{abstract}
+\label{ch:lda}
+
+\section{The puzzle}\label{sec:lda-puzzle}
+
+In \Next[a], the matrix verb \textit{chaah} `want' is feminine. Its own subject is ergative and cannot be agreed with, so the feminine value must come from \textit{\d{t}ehnii} `branch', the object of the embedded verb.\footnote{In Hindi-Urdu, ergative and dative arguments are opaque to agreement, so the probe looks further.}
+
+\pex \dref{hu-lda}
+  \a \begingl
+     \gla Shahrukh-ne [\d{t}ehnii kaa\d{t}-nii] chaah-ii thii //
+     \glb Shahrukh-\sc{erg} branch.\sc{f} cut-\sc{inf.f} want-\sc{pfv.f} be.\sc{pst.f.sg} //
+     \endgl
+  \a \begingl
+     \gla Shahrukh-ne [\d{t}ehnii kaa\d{t}-naa] chaah-aa thaa //
+     \glb Shahrukh-\sc{erg} branch.\sc{f} cut-\sc{inf.m} want-\sc{pfv.m} be.\sc{pst.m.sg} //
+     \glft `Shahrukh had wanted to cut the branch.' \citep{bhatt2005} //
+     \endgl
+\xe
+
+Both variants are grammatical. What is excluded is mismatch: agreement on the infinitive and on the matrix verb covary.\footnote{\textit{*kaa\d{t}-naa \dots{} chaah-ii} is sharply out for all consultants.} Compare Tsez, where long-distance agreement is restricted to topics \citep{polinsky2001}.
+
+\section{Restructuring and the size of the complement}\label{sec:lda-restructuring}
+
+The covariation follows if the infinitive is a bare \vP with no phase boundary of its own, so the matrix probe can see straight into it. Structure \Next makes this explicit: there is no CP or TP layer between matrix T and the embedded object. This is the same downward search as in \gref{agree-tree}, only over a longer distance.
+
+\ex \dref{lda-tree}
+\begin{forest}
+[TP
+  [DP \\ \textit{Shahrukh-ne}]
+  [T\1
+    [\vP
+      [VP
+        [\vP\subs{inf}
+          [DP\feat{3 · sg · \textsc{f}} \\ \textit{\d{t}ehnii}, name=goal]
+          [V \\ \textit{kaa\d{t}-nii}]]
+        [V \\ \textit{chaah-ii}]]
+      [\lv]]
+    [T\feat{u\ph: \_\_}, name=probe]]]
+\draw[->, dashed, blue] (probe) to[out=south, in=south, looseness=1.15] node[pos=.5, below, text=blue]{\textit{Agree}} (goal);
+\end{forest}
+\xe
+
+The prediction is that anything that adds a phase boundary, such as an overt complementizer or a finite embedded clause, should block long-distance agreement. Section~4.3 shows that it does.\comment{§4.3 not drafted yet. Bring over the \textit{ki}-clause data from the 2025 handout.}

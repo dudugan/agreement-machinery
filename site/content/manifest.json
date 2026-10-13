@@ -1,0 +1,57 @@
+{
+  "macros": "macros.tex",
+  "bibliography": "refs.bib",
+  "categories": [
+    "languages",
+    "properties",
+    "phenomena",
+    "theories"
+  ],
+  "parts": [
+    {
+      "title": "The Mechanism",
+      "chapters": [
+        "chapters/introduction.tex",
+        "chapters/agree-and-the-probe.tex",
+        "chapters/features-and-their-values.tex"
+      ]
+    },
+    {
+      "title": "Agreement at a Distance",
+      "chapters": [
+        "chapters/long-distance-agreement.tex",
+        "chapters/hindi-urdu.tex",
+        "chapters/icelandic.tex"
+      ]
+    },
+    {
+      "title": "Heads and Their Spellout",
+      "chapters": [
+        "chapters/head-chains.tex",
+        "chapters/construct-state.tex",
+        "chapters/attraction-errors.tex"
+      ]
+    },
+    {
+      "title": "Implementation",
+      "chapters": [
+        "chapters/mtsm-in-python.tex"
+      ]
+    }
+  ],
+  "phenomena": [
+    "phenomena/english-sva.tex",
+    "phenomena/hindi-urdu-lda.tex",
+    "phenomena/icelandic-dative.tex",
+    "phenomena/tsez-lda.tex",
+    "phenomena/english-attraction.tex",
+    "phenomena/kaqchikel-af.tex",
+    "phenomena/slovenian-cca.tex",
+    "phenomena/arabic-partial.tex"
+  ],
+  "features": {
+    "#": "number",
+    "π": "person",
+    "γ": "gender / noun class"
+  }
+}

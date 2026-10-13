@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agreement Machinery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F1EBDD; --paper:#FAF6EC; --ink:#2B2620; --muted:#8A7F6E; --faint:#B4A88F;
+  --rule:#D8CCB4; --hl:#E7DDC6; --navy:#2A3A63; --tan:#CDBB9B; --link:#5A4632;
+  --serif:"EB Garamond", Georgia, serif; --mono:"IBM Plex Mono", ui-monospace, monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.6;
+  background-image:radial-gradient(rgba(120,100,60,.05) 1px, transparent 1px);background-size:3px 3px}
+a{color:inherit}
+.sc{font-variant:small-caps;letter-spacing:.06em}
+.wrap{max-width:1320px;margin:0 auto;padding:0 32px}
+
+/* ---------- header / navbar ---------- */
+header.top{position:sticky;top:0;z-index:20;background:var(--bg)}
+.toolbarbar{position:sticky;top:var(--mast,90px);z-index:19;background:var(--bg)}
+.mast{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:22px 0 14px;border-bottom:1px solid var(--rule)}
+.kicker{white-space:nowrap;font-variant:small-caps;letter-spacing:.09em;font-size:14px;color:var(--muted);margin:0 0 2px}
+.brand{font-style:italic;font-weight:400;font-size:34px;line-height:1.05;margin:0;letter-spacing:.005em;cursor:pointer}
+nav.tabs{display:flex;gap:34px;padding-bottom:4px}
+nav.tabs a{white-space:nowrap;text-decoration:none;font-size:13.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding-bottom:6px;border-bottom:2px solid transparent;cursor:pointer}
+nav.tabs a:hover{color:var(--ink)}
+nav.tabs a.on{color:var(--navy);border-bottom-color:var(--navy)}
+.toolbar{display:flex;justify-content:space-between;align-items:center;padding:18px 0 22px}
+.pill{display:inline-flex;border:1px solid var(--rule);background:var(--paper)}
+.pill button{font:inherit;font-size:11px;letter-spacing:.1em;text-transform:uppercase;border:0;background:transparent;color:var(--muted);padding:6px 10px;white-space:nowrap;cursor:pointer}
+.pill button.on{background:var(--navy);color:#F4EEDF}
+.search{margin-left:auto;width:266px;font:inherit;font-size:16px;background:var(--paper);border:1px solid var(--rule);color:var(--ink);padding:7px 12px;outline:none}
+.search::placeholder{color:var(--muted);font-style:italic}
+.search:focus{border-color:var(--tan)}
+
+/* ---------- layout ---------- */
+.layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px;align-items:start}
+aside.side{position:sticky;top:calc(var(--hdr,180px) + 16px);max-height:calc(100vh - var(--hdr,180px) - 34px);overflow:auto;padding-right:10px;
+  scrollbar-width:thin;scrollbar-color:var(--tan) transparent}
+.side h4{font-weight:400;font-variant:small-caps;letter-spacing:.09em;font-size:14.5px;margin:18px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--rule);color:var(--ink)}
+.side h4:first-child{margin-top:0}
+.side h4 .rn{margin-right:6px}
+.side .cat{font-style:italic;color:var(--muted);font-size:15.5px;margin:8px 0 2px 2px}
+.side .cat:before{content:"❧ ";color:var(--tan);font-style:normal}
+.side ol{list-style:none;margin:0;padding:0}
+.side li a{display:flex;gap:12px;padding:3px 8px;text-decoration:none;font-size:16.5px;line-height:1.35;cursor:pointer}
+.side li a .n{font-family:var(--mono);font-size:11.5px;color:var(--faint);padding-top:4px;min-width:16px}
+.side li a:hover{background:rgba(205,187,155,.25)}
+.side li a.on{background:var(--hl)}
+.side .empty{font-style:italic;color:var(--muted);font-size:15px;padding:4px 8px}
+
+body.noside .toolbarbar{display:none}
+body.noside .layout{padding-top:26px}
+body.noside .sidetog{display:none}
+body.hideleft .layout{grid-template-columns:minmax(0,1fr)}
+body.hideleft aside.side{display:none}
+body.hideright .pagegrid{grid-template-columns:minmax(0,640px)}
+body.hideright .margin{display:none}
+body.hideleft .pagegrid, body.hideright .pagegrid{justify-content:center}
+.menubtn{display:none;white-space:nowrap;font:inherit;font-size:11px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--rule);background:var(--paper);color:var(--muted);padding:6px 10px;cursor:pointer}
+.ex.wide,figure.tree.wide{position:relative;z-index:2}
+.page{display:none}
+.page.on{display:block}
+.pagegrid{display:grid;grid-template-columns:minmax(0,640px) 250px;gap:56px;align-items:start}
+
+/* ---------- article ---------- */
+.crumb{font-variant:small-caps;letter-spacing:.09em;font-size:14px;color:var(--muted);margin:0}
+h1.title{font-style:italic;font-weight:400;font-size:38px;line-height:1.1;margin:6px 0 4px}
+.meta{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:22px}
+.abstract{border:1px solid var(--rule);background:rgba(250,246,236,.55);padding:16px 20px;font-size:16px;line-height:1.55;color:#4a4237;margin-bottom:30px}
+.abstract .lbl{display:block;font-variant:small-caps;letter-spacing:.09em;font-size:13px;color:var(--muted);margin-bottom:4px}
+article h2{font-weight:500;font-size:22px;margin:38px 0 10px;scroll-margin-top:200px}
+article h2 .num{font-family:var(--mono);font-size:13px;color:var(--faint);margin-right:12px;font-weight:400}
+article p{margin:0 0 16px;font-size:18.5px;line-height:1.68;hyphens:auto;text-align:justify}
+.ref{font-family:var(--mono);font-size:10.5px;color:var(--navy);vertical-align:super;line-height:0;padding:0 1px 0 1px;cursor:pointer}
+.ref.com{color:#8b5a2b}
+.ref.com:before{content:"◆"}
+.anch{border-bottom:1px dotted var(--muted)}
+.anch.hot,.ref.hot{background:var(--hl)}
+.xref{color:var(--link);text-decoration:none;border-bottom:1px dotted var(--link);cursor:pointer}
+.xref:hover{background:var(--hl)}
+.cite{color:inherit;text-decoration:none;border-bottom:1px dotted var(--faint);cursor:pointer}
+.cite:hover{background:var(--hl)}
+
+/* ---------- linguistic examples (expex-style) ---------- */
+.ex{display:grid;grid-template-columns:44px minmax(0,1fr);margin:20px 0 22px;font-size:18px;line-height:1.5;scroll-margin-top:210px}
+.ex.flash{animation:flash 1.6s ease}
+@keyframes flash{0%,40%{background:var(--hl)}100%{background:transparent}}
+.ex .no{color:var(--ink)}
+.ex .sub{display:grid;grid-template-columns:24px minmax(0,1fr);margin-bottom:3px}
+.ex .sub .l{color:var(--ink)}
+.ex .sub > span:last-child{padding-left:.9em}
+.j{display:inline-block;width:.9em;margin-left:-.9em;text-align:right;padding-right:2px}
+.gloss{display:flex;flex-wrap:wrap;gap:0 15px}
+.gloss .w{display:inline-flex;flex-direction:column}
+.gloss .w .o{font-style:italic}
+.gloss .w .g{font-size:16.5px}
+.trans{margin-top:2px}
+.src{color:var(--muted);font-size:15.5px}
+figure.tree{margin:24px 0 26px;display:grid;grid-template-columns:44px minmax(0,1fr)}
+figure.tree .box{border:1px solid var(--rule);background:rgba(250,246,236,.6);padding:18px 10px 10px;overflow-x:auto}
+figure.tree svg{display:block;margin:0 auto;max-width:100%;height:auto}
+figure.tree figcaption{font-family:var(--mono);font-size:11.5px;color:var(--muted);padding:8px 4px 0;letter-spacing:.03em}
+.tree text{font-family:var(--serif);fill:var(--ink)}
+.tree .leaf{font-style:italic}
+.tree .feat{font-family:var(--mono);font-size:10.5px;fill:var(--navy)}
+.tree line,.tree polygon{stroke:#6E6353;stroke-width:1;fill:none}
+.tree .agree{stroke:var(--navy);stroke-width:1.2;stroke-dasharray:4 3;fill:none}
+.tree .alabel{font-style:italic;font-size:13px;fill:var(--navy)}
+
+.chapnav{display:flex;justify-content:space-between;border-top:1px solid var(--rule);margin-top:48px;padding:14px 0 80px;font-size:16px}
+.chapnav a{text-decoration:none;cursor:pointer;color:var(--muted)}
+.chapnav a:hover{color:var(--ink)}
+.chapnav i{color:var(--ink)}
+
+/* ---------- marginalia ---------- */
+.margin{position:relative;min-height:400px}
+.mhead{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--rule);padding-bottom:4px}
+.mhead .t{font-variant:small-caps;letter-spacing:.09em;font-size:14px}
+.mhead .c{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0}
+.chip{font:inherit;font-size:12px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--rule);background:var(--paper);color:var(--muted);padding:3px 9px;cursor:pointer}
+.chip.on{background:var(--navy);color:#F4EEDF;border-color:var(--navy)}
+.note{position:absolute;left:0;right:0;display:grid;grid-template-columns:22px 1fr;padding:2px 0 8px 12px;border-left:2px solid var(--rule);
+  font-size:15.5px;line-height:1.45;transition:top .25s ease, background .15s}
+.note .k{font-family:var(--mono);font-size:11px;color:var(--navy);padding-top:3px}
+.note.com{border-left-color:#C9A27A}
+.note.com .k{color:#8b5a2b}
+.note .tag{display:inline-block;margin-top:6px;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border:1px solid var(--rule);padding:0 5px}
+.note.hot{background:rgba(231,221,198,.75)}
+.note.hidden{display:none}
+.note i{font-style:italic}
+
+/* ---------- hover preview ---------- */
+.pop{position:absolute;z-index:50;max-width:430px;background:var(--paper);border:1px solid var(--tan);box-shadow:0 6px 24px rgba(60,45,20,.16);padding:12px 16px;font-size:15.5px;line-height:1.5;display:none;pointer-events:none}
+.pop .pk{font-variant:small-caps;letter-spacing:.09em;font-size:12.5px;color:var(--muted)}
+.pop .pt{font-style:italic;font-size:21px;margin:0 0 4px}
+.pop .ex{margin:4px 0;font-size:16px}
+.pop .gloss .w .g{font-size:14.5px}
+
+/* ---------- bibliography / misc pages ---------- */
+.single{max-width:760px}
+body.noside .layout{grid-template-columns:minmax(0,1fr)}
+body.noside aside.side{display:none}
+body.noside .single{margin:0 auto}
+.bib{list-style:none;padding:0;margin:10px 0 80px}
+.bib li{padding:12px 0 12px 28px;text-indent:-28px;border-bottom:1px solid rgba(216,204,180,.6);font-size:17.5px;scroll-margin-top:210px}
+.bib li .by{font-family:var(--mono);font-size:11px;color:var(--muted);text-indent:0;display:block;margin:3px 0 0 0}
+.bib li .by a{color:var(--navy);text-decoration:none;border-bottom:1px dotted var(--navy);cursor:pointer;margin-right:10px}
+.bib li.flash{animation:flash 1.6s ease}
+.letter{font-variant:small-caps;letter-spacing:.1em;color:var(--muted);font-size:15px;margin:26px 0 0;border-bottom:1px solid var(--rule);padding-bottom:2px}
+/* ---------- encyclopedia: a stack of books ---------- */
+body.noside .single.shelf{max-width:1040px}
+.enc-tools{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:4px 0 26px;flex-wrap:wrap}
+.enc-search{margin-left:0;width:300px}
+.enc-feats{display:flex;align-items:center;gap:6px}
+.enc-feats .lbl{font-variant:small-caps;letter-spacing:.09em;font-size:14px;color:var(--muted);margin-right:4px}
+.enc-feats .chip{font-family:var(--serif);font-size:15px;letter-spacing:0;text-transform:none;min-width:34px}
+:root{--cols:2.6fr .9fr .75fr 1.5fr .65fr 1.4fr}
+.stack-head{display:grid;grid-template-columns:var(--cols);padding:0 54px 6px;gap:0}
+.stack-head button{white-space:nowrap;font:inherit;text-align:left;background:none;border:0;padding:0 12px;cursor:pointer;
+  font-variant:small-caps;letter-spacing:.09em;font-size:14px;color:var(--muted)}
+.stack-head button:first-child{padding-left:0}
+.stack-head button:hover{color:var(--ink)}
+.stack-head button.on{color:var(--navy)}
+.stack-head button.on:after{content:" ↓";font-family:var(--mono);font-size:11px}
+.stack-head button.on.desc:after{content:" ↑"}
+.stack{padding:0 40px;display:flex;flex-direction:column}
+.book{position:relative;display:grid;grid-template-columns:var(--cols);align-items:center;
+  min-height:var(--h);margin:-2px calc(-1*var(--r)) 0 calc(-1*var(--l));padding:8px calc(var(--r) + 16px) 8px calc(var(--l) + 16px);
+  color:var(--ink);text-decoration:none;cursor:pointer;rotate:var(--rot);
+  transition:translate .28s cubic-bezier(.2,.7,.3,1), rotate .28s ease}
+.book > .outline{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:0;pointer-events:none}
+.book > .outline .body{fill:#F6F0E1;stroke:var(--ink);stroke-width:1.25;stroke-linejoin:round}
+.book > .outline .line{fill:none;stroke:var(--ink);stroke-width:1;stroke-linecap:round}
+.book > .outline .ghost{fill:none;stroke:var(--ink);stroke-width:.8;opacity:.28}
+.book:hover,.book:focus-visible{translate:18px 0;rotate:calc(var(--rot) * .3);z-index:3;outline:none}
+.book:hover > .outline .body,.book:focus-visible > .outline .body{fill:var(--paper)}
+.book .cell{position:relative;z-index:1;padding:0 12px;font-size:15px;line-height:1.3;border-left:1px solid rgba(43,38,32,.16)}
+.book .cell.name{padding-left:0;border-left:0;font-style:italic;font-size:18.5px;letter-spacing:.005em}
+.book.label .cell.name span{display:inline-block;line-height:1.25;padding:2px 10px;border:1px solid var(--ink);border-radius:2px 3px 2px 4px;rotate:-.4deg}
+.book .cell.feats{font-size:16px;letter-spacing:.06em}
+.book .cell.dim{color:var(--muted)}
+.book.gone{display:none}
+.plank{display:block;width:calc(100% - 12px);height:18px;margin:4px 6px 0;overflow:visible}
+.plank path{fill:none;stroke:var(--ink);stroke-linecap:round}
+.legend{font-family:var(--mono);font-size:11.5px;color:var(--muted);text-align:center;margin:22px 0 80px}
+.stack .empty{font-style:italic;color:var(--muted);text-align:center;padding:30px 0}
+
+/* phenomenon page */
+.back{color:var(--muted);text-decoration:none;cursor:pointer}
+.back:hover{color:var(--ink)}
+.card{display:grid;grid-template-columns:14px 1fr;border:1px solid var(--rule);background:var(--paper);margin:6px 0 30px}
+.card .spine{border-right:1px solid var(--ink);background:repeating-linear-gradient(45deg,var(--ink) 0 1px,transparent 1px 6px)}
+.card dl{margin:0;padding:6px 22px;display:grid;grid-template-columns:120px 1fr}
+.card dt,.card dd{margin:0;padding:9px 0;border-bottom:1px solid rgba(216,204,180,.7)}
+.card dt{font-variant:small-caps;letter-spacing:.09em;font-size:14px;color:var(--muted)}
+.card dd{font-size:17.5px}
+.card dl > :nth-last-child(-n+2){border-bottom:0}
+.placeholder{border:1px dashed var(--tan);padding:40px;text-align:center;color:var(--muted);font-style:italic;margin-top:20px}
+
+.sidetog{position:fixed;bottom:14px;z-index:60;width:34px;height:30px;padding:6px 7px;background:var(--paper);border:1px solid var(--rule);cursor:pointer;color:var(--muted)}
+.sidetog:hover{color:var(--ink);border-color:var(--tan)}
+.sidetog.left{left:14px} .sidetog.right{right:14px}
+.sidetog svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.3}
+.sidetog .fill{fill:currentColor;stroke:none;opacity:.55}
+.sidetog.off .fill{opacity:0}
+body.nonotes .sidetog.right{display:none}
+.pop.note-pop{pointer-events:auto;cursor:pointer;max-width:340px}
+.pop.note-pop .hint{display:block;margin-top:6px;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+
+@media (max-width:1180px){ .pagegrid{grid-template-columns:minmax(0,1fr) 220px;gap:36px} nav.tabs{gap:22px} nav.tabs a{font-size:12.5px} }
+@media (max-width:980px){
+  .layout{grid-template-columns:1fr;gap:0} aside.side{display:none}
+  body.noside aside.side{display:none}
+  body.sideopen aside.side{display:block;position:static;max-height:none;overflow:visible;padding:0 0 24px}
+  .toolbar{flex-wrap:wrap;justify-content:flex-start;gap:12px 10px} .search{order:0;width:100%;margin-left:0}
+  .menubtn{display:inline-block;order:1} .pill{order:2}
+  .toolbarbar{position:static}
+  nav.tabs{gap:16px;flex-wrap:wrap} nav.tabs a{font-size:12.5px}
+}
+@media (max-width:760px){
+  .wrap{padding:0 16px}
+  .pill button,.menubtn{padding:6px 8px;letter-spacing:.06em}
+  .toolbar{gap:12px 8px}
+  .mast{flex-direction:column;align-items:flex-start;gap:10px}
+  .pagegrid{grid-template-columns:1fr}
+  .note{position:static;margin-bottom:10px}
+  header.top{position:static}
+  article p{text-align:left}
+  .enc-search{width:100%}
+  .stack-head{display:flex;flex-wrap:wrap;gap:6px 14px;padding:0 0 10px}
+  .stack-head button{padding:0}
+  .stack{padding:0 12px}
+  .book{display:block;margin:0 calc(-.35*var(--r)) 0 calc(-.35*var(--l));padding:10px calc(.35*var(--r) + 18px) 10px calc(.35*var(--l) + 18px)}
+  .book:hover{translate:8px 0}
+  .book .cell{display:inline;border:0;padding:0;font-size:14px}
+  .book .cell.name{display:block;margin-bottom:3px}
+  .book .cell:not(.name):before{content:attr(data-label) " ";font-variant:small-caps;letter-spacing:.06em;opacity:.7}
+  .book .cell:not(.name):not(:last-child):after{content:"  ·  ";opacity:.5}
+  .card dl{grid-template-columns:96px 1fr;padding:4px 16px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="mast">
+      <div>
+        <p class="kicker">An Independent Study and Thesis Project</p>
+        <h1 class="brand" data-go="ch2">Agreement Machinery</h1>
+      </div>
+      <nav class="tabs">
+        <a data-tab="machinery" class="on" data-go="ch2">The Machinery</a>
+        <a data-tab="encyclopedia" data-go="encyclopedia">The Encyclopedia</a>
+        <a data-tab="bibliography" data-go="bibliography">Bibliography</a>
+        <a data-tab="about" data-go="about">About</a>
+      </nav>
+    </div>
+  </div>
+</header>
+<div class="toolbarbar">
+  <div class="wrap">
+    <div class="toolbar">
+      <div class="pill" id="sidemode">
+        <button data-mode="order" class="on">Reading Order</button>
+        <button data-mode="cat">By Category</button>
+      </div>
+      <button class="menubtn" id="menubtn">☰ Contents</button>
+      <input class="search" id="search" placeholder="probe in one direction or another…">
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+<div class="layout">
+  <aside class="side" id="side"></aside>
+
+  <main id="pages">
+
+  <!-- =================== CHAPTER 2 =================== -->
+  <section class="page" data-page="ch2">
+   <div class="pagegrid">
+    <article>
+      <p class="crumb">Theories · Chapter 2</p>
+      <h1 class="title">Agree and the Probe</h1>
+      <div class="meta">chapter 02 of 09 · 4 examples · 1 tree · 6 notes</div>
+      <div class="abstract"><span class="lbl">Synopsis</span>
+        This chapter sets out the basic mechanism assumed throughout: an unvalued head searches downward for the closest
+        matching goal and copies its values. We look at what counts as <i>closest</i>, what happens when the closest thing
+        is the wrong kind of thing, and how fine-grained a probe's search can be.</div>
+
+      <h2 id="s2-1"><span class="num">2.1</span>The basic configuration</h2>
+      <p>Agreement is the clearest case in natural language of a dependency that is both obligatory and
+        <span class="anch" data-a="f1">asymmetric</span><span class="ref" data-r="f1">1</span>: one element carries features it does not
+        interpret, and must obtain their values from another element that does. Following
+        <a class="cite" data-bib="chomsky2000">Chomsky (2000</a>, <a class="cite" data-bib="chomsky2001">2001)</a>, this asymmetry is
+        encoded directly. A head bearing unvalued φ-features (the <i>probe</i>) searches its c-command domain for the closest
+        bearer of valued φ-features (the <i>goal</i>) and copies their values.</p>
+
+      <div class="ex" id="ch2-ex1"><span class="no">(1)</span><div>
+        <div class="sub"><span class="l">a.</span><span><span class="j"></span>The keys to the cabinet <b>are</b> on the table.</span></div>
+        <div class="sub"><span class="l">b.</span><span><span class="j">*</span>The keys to the cabinet <b>is</b> on the table.</span></div>
+        <div class="sub"><span class="l">c.</span><span><span class="j">%</span>The key to the cabinets <b>are</b> on the table.</span></div>
+      </div></div>
+
+      <p>The contrast in <a class="xref" data-ex="ch2-ex1">(1a–b)</a> is the familiar one. <a class="xref" data-ex="ch2-ex1">(1c)</a> is more
+        interesting: speakers produce it and often accept it, an <i>attraction</i> effect documented since
+        <a class="cite" data-bib="bock1991">Bock &amp; Miller (1991)</a>. We return to it in
+        <a class="xref" data-go="ch8">Chapter 8</a>. For now it is a reminder that the closest goal in linear terms is not always the
+        <span class="anch" data-a="f2">closest in structural terms</span><span class="ref" data-r="f2">2</span>.</p>
+
+      <figure class="tree" id="ch2-ex2"><span class="no">(2)</span><div>
+        <div class="box"><svg data-tree="[TP [T#p|uφ:__] [vP [DP#g|3·pl [D the] [NP keys]] [v′ [v] [VP [V be] [^PP {on the table}]]]]]" data-arrows="p>g:Agree"></svg></div>
+        <figcaption>tree 2.1 · agree before movement: T probes into its sister vP</figcaption>
+      </div></figure>
+
+      <p>In <a class="xref" data-ex="ch2-ex2">(2)</a>, T is merged with an unvalued set of φ-features, written <span style="font-family:var(--mono);font-size:15px">uφ: __</span>.
+        Its search domain is its sister, vP. The first DP it encounters is the external argument in
+        <span class="anch" data-a="r1">Spec,vP</span><span class="ref com" data-r="r1"></span>, which bears [3, pl]. These values are copied
+        onto T, which is then spelled out as <i>are</i>. Only after valuation does the subject raise to Spec,TP. That ordering matters
+        later, when we ask whether movement can feed agreement.</p>
+
+      <h2 id="s2-2"><span class="num">2.2</span>Locality and intervention</h2>
+      <p>Because search proceeds top-down, a goal closer to the probe blocks agreement with one further away. This
+        <i>defective intervention</i> is most visible in Icelandic experiencer constructions, where a dative sits between T and a
+        <span class="anch" data-a="f3">nominative</span><span class="ref" data-r="f3">3</span>:</p>
+
+      <div class="ex" id="ch2-ex3"><span class="no">(3)</span><div>
+        <div class="gloss">
+          <span class="w"><span class="o">Það</span><span class="g">EXPL</span></span>
+          <span class="w"><span class="o">virðist / *virðast</span><span class="g">seem.SG / seem.PL</span></span>
+          <span class="w"><span class="o">einhverjum manni</span><span class="g">some man.DAT</span></span>
+          <span class="w"><span class="o">[hestarnir</span><span class="g">the.horses.NOM</span></span>
+          <span class="w"><span class="o">vera</span><span class="g">be</span></span>
+          <span class="w"><span class="o">seinir]</span><span class="g">slow</span></span>
+        </div>
+        <div class="trans">‘It seems to some man that the horses are slow.’ <span class="src">(<a class="cite" data-bib="holmberg2003">Holmberg &amp; Hróarsdóttir 2003</a>)</span></div>
+      </div></div>
+
+      <p>The dative is close enough to stop the probe but, being inherently case-marked, cannot value it, and T surfaces with default
+        singular morphology. <a class="cite" data-bib="preminger2014">Preminger (2014)</a> argues that this is not a crash but a
+        legitimate outcome: <span class="anch" data-a="f4">the probe fails, and the derivation goes on</span><span class="ref" data-r="f4">4</span>.</p>
+
+      <h2 id="s2-3"><span class="num">2.3</span>What the probe is looking for</h2>
+      <p>If probes are relativized to particular features, intervention should be selective. A probe searching only for
+        [participant] should skip third-person DPs entirely and agree with a lower first- or second-person goal. This is the core
+        insight of <a class="cite" data-bib="bejar2009">Béjar &amp; Rezac (2009)</a>. We develop the relativized view in
+        <a class="xref" data-go="ch3">Chapter 3</a> and test it against <span class="anch" data-a="r2">long-distance agreement</span><span class="ref com" data-r="r2"></span>
+        in <a class="xref" data-go="ch4" data-to="s4-2">§4.2</a>, where the goal sits inside an infinitival complement, as in
+        <a class="xref" data-ex="ch4-ex1">(1) of Chapter 4</a>.</p>
+
+      <p>Throughout, I write <span class="anch" data-a="f5">φ</span><span class="ref" data-r="f5">5</span> for the bundle that
+        T and v probe for. The examples so far make the probe look like a single, indivisible searcher. The rest of the book
+        argues against that picture.</p>
+
+      <div class="chapnav"><a data-go="ch1">← 1 · <i>Introduction</i></a><a data-go="ch3">3 · <i>Features and Their Values</i> →</a></div>
+    </article>
+
+    <div class="margin">
+      <div class="mhead"><span class="t">Notes</span><span class="c">6</span></div>
+      <div class="chips"><button class="chip on" data-kind="fn">Footnotes</button><button class="chip on" data-kind="com">Comments</button></div>
+      <div class="note fn" data-n="f1"><span class="k">1</span><div>Asymmetric in the sense that only one side of the relation is semantically interpreted. Gender on adjectives is the clearest case.<br><span class="tag">footnote</span></div></div>
+      <div class="note fn" data-n="f2"><span class="k">2</span><div>Attraction is sensitive to hierarchical depth: a PP-embedded noun attracts more than a relative-clause-embedded one.<br><span class="tag">footnote</span></div></div>
+      <div class="note com" data-n="r1"><span class="k">◆</span><div>Is Spec,vP visible to T before the v-phase is complete? Cross-check with the PIC discussion in <a class="xref" data-go="ch3">ch. 3</a>.<br><span class="tag">comment</span></div></div>
+      <div class="note fn" data-n="f3"><span class="k">3</span><div>The judgment holds for most speakers in the expletive construction. When the dative raises, plural agreement becomes available.<br><span class="tag">footnote</span></div></div>
+      <div class="note fn" data-n="f4"><span class="k">4</span><div>On this view, default morphology is what an unvalued probe sounds like, not a separate rule.<br><span class="tag">footnote</span></div></div>
+      <div class="note com" data-n="r2"><span class="k">◆</span><div>Draft: decide whether to adopt <i>upward</i> Agree (<a class="cite" data-bib="zeijlstra2012">Zeijlstra 2012</a>) for concord. If so, the tree in (2) changes.<br><span class="tag">comment</span></div></div>
+      <div class="note fn" data-n="f5"><span class="k">5</span><div>As shorthand for person, number, and gender, without claiming that they form a natural class.<br><span class="tag">footnote</span></div></div>
+    </div>
+   </div>
+  </section>
+
+  <!-- =================== CHAPTER 4 =================== -->
+  <section class="page" data-page="ch4">
+   <div class="pagegrid">
+    <article>
+      <p class="crumb">Phenomena · Chapter 4</p>
+      <h1 class="title">Long-Distance Agreement</h1>
+      <div class="meta">chapter 04 of 09 · 2 examples · 1 tree · 3 notes</div>
+      <div class="abstract"><span class="lbl">Synopsis</span>
+        In Hindi-Urdu, a matrix verb can agree with the object of an embedded infinitive. We argue this is ordinary downward
+        Agree (<a class="xref" data-go="ch2" data-to="s2-1">§2.1</a>) operating across an unusually small complement.</div>
+
+      <h2 id="s4-1"><span class="num">4.1</span>The puzzle</h2>
+      <p>In <a class="xref" data-ex="ch4-ex1">(1a)</a>, the matrix verb <i>chaah</i> ‘want’ is feminine. Its own subject is ergative
+        and cannot be agreed with, so the feminine value must come from <i>ṭehnii</i> ‘branch’, the object of the
+        <span class="anch" data-a="g1">embedded verb</span><span class="ref" data-r="g1">1</span>.</p>
+
+      <div class="ex" id="ch4-ex1"><span class="no">(1)</span><div>
+        <div class="sub"><span class="l">a.</span><div>
+          <div class="gloss">
+            <span class="w"><span class="o">Shahrukh-ne</span><span class="g">Shahrukh-ERG</span></span>
+            <span class="w"><span class="o">[ṭehnii</span><span class="g">branch.F</span></span>
+            <span class="w"><span class="o">kaaṭ-nii]</span><span class="g">cut-INF.F</span></span>
+            <span class="w"><span class="o">chaah-ii</span><span class="g">want-PFV.F</span></span>
+            <span class="w"><span class="o">thii</span><span class="g">be.PST.F.SG</span></span>
+          </div></div></div>
+        <div class="sub"><span class="l">b.</span><div>
+          <div class="gloss">
+            <span class="w"><span class="o">Shahrukh-ne</span><span class="g">Shahrukh-ERG</span></span>
+            <span class="w"><span class="o">[ṭehnii</span><span class="g">branch.F</span></span>
+            <span class="w"><span class="o">kaaṭ-naa]</span><span class="g">cut-INF.M</span></span>
+            <span class="w"><span class="o">chaah-aa</span><span class="g">want-PFV.M</span></span>
+            <span class="w"><span class="o">thaa</span><span class="g">be.PST.M.SG</span></span>
+          </div></div></div>
+        <div class="trans" style="margin-left:24px">‘Shahrukh had wanted to cut the branch.’ <span class="src">(<a class="cite" data-bib="bhatt2005">Bhatt 2005</a>)</span></div>
+      </div></div>
+
+      <p>Both variants are grammatical. What is excluded is mismatch: agreement on the infinitive and on the matrix verb
+        <span class="anch" data-a="g2">covary</span><span class="ref" data-r="g2">2</span>. Compare Tsez, where long-distance agreement is
+        restricted to topics (<a class="cite" data-bib="polinsky2001">Polinsky &amp; Potsdam 2001</a>).</p>
+
+      <h2 id="s4-2"><span class="num">4.2</span>Restructuring and the size of the complement</h2>
+      <p>The covariation follows if the infinitive is a bare vP with no phase boundary of its own, so the matrix probe
+        can see straight into it. Structure <a class="xref" data-ex="ch4-ex2">(2)</a> makes this explicit: there is no CP or TP layer
+        between matrix T and the embedded object. This is the same downward search as in
+        <a class="xref" data-ex="ch2-ex2">(2) of Chapter 2</a>, only over a longer distance.</p>
+
+      <figure class="tree" id="ch4-ex2"><span class="no">(2)</span><div>
+        <div class="box"><svg data-tree="[TP [DP Shahrukh-ne] [T′ [vP [VP [vP_{inf} [DP#g|3·sg·F ṭehnii] [V kaaṭ-nii]] [V chaah-ii]] [v]] [T#p|uφ:__]]]" data-arrows="p>g:Agree:low"></svg></div>
+        <figcaption>tree 4.1 · matrix T probes into a phase-less vP complement</figcaption>
+      </div></figure>
+
+      <p>The prediction is that anything that adds a phase boundary, such as an overt complementizer or a finite embedded clause,
+        should block long-distance agreement. Section 4.3 shows that <span class="anch" data-a="g3">it does</span><span class="ref com" data-r="g3"></span>.</p>
+
+      <div class="chapnav"><a data-go="ch3">← 3 · <i>Features and Their Values</i></a><a data-go="ch5">5 · <i>Hindi-Urdu</i> →</a></div>
+    </article>
+    <div class="margin">
+      <div class="mhead"><span class="t">Notes</span><span class="c">3</span></div>
+      <div class="chips"><button class="chip on" data-kind="fn">Footnotes</button><button class="chip on" data-kind="com">Comments</button></div>
+      <div class="note fn" data-n="g1"><span class="k">1</span><div>In Hindi-Urdu, ergative and dative arguments are opaque to agreement, so the probe looks further.<br><span class="tag">footnote</span></div></div>
+      <div class="note fn" data-n="g2"><span class="k">2</span><div><i>*kaaṭ-naa … chaah-ii</i> is sharply out for all consultants.<br><span class="tag">footnote</span></div></div>
+      <div class="note com" data-n="g3"><span class="k">◆</span><div>§4.3 not drafted yet. Bring over the <i>ki</i>-clause data from the 2025 handout.<br><span class="tag">comment</span></div></div>
+    </div>
+   </div>
+  </section>
+
+  <!-- =================== BIBLIOGRAPHY =================== -->
+  <section class="page" data-page="bibliography">
+    <div class="single">
+      
+      <h1 class="title">Bibliography</h1>
+      <div class="meta">10 works · each entry lists where it is cited</div>
+      <ul class="bib">
+        <li class="letter" style="text-indent:0;padding-left:0;border:0">B</li>
+        <li id="bib-bejar2009">Béjar, Susana &amp; Milan Rezac. 2009. Cyclic Agree. <i>Linguistic Inquiry</i> 40(1): 35–73.<span class="by">cited in <a data-go="ch2" data-to="s2-3">ch. 2 §2.3</a></span></li>
+        <li id="bib-bhatt2005">Bhatt, Rajesh. 2005. Long distance agreement in Hindi-Urdu. <i>Natural Language &amp; Linguistic Theory</i> 23(4): 757–807.<span class="by">cited in <a data-go="ch4" data-to="s4-1">ch. 4 §4.1</a></span></li>
+        <li id="bib-bock1991">Bock, Kathryn &amp; Carol A. Miller. 1991. Broken agreement. <i>Cognitive Psychology</i> 23(1): 45–93.<span class="by">cited in <a data-go="ch2" data-to="s2-1">ch. 2 §2.1</a> <a data-go="ch8">ch. 8</a></span></li>
+        <li class="letter" style="text-indent:0;padding-left:0;border:0">C</li>
+        <li id="bib-chomsky2000">Chomsky, Noam. 2000. Minimalist inquiries: The framework. In R. Martin, D. Michaels &amp; J. Uriagereka (eds.), <i>Step by Step</i>, 89–155. MIT Press.<span class="by">cited in <a data-go="ch2" data-to="s2-1">ch. 2 §2.1</a></span></li>
+        <li id="bib-chomsky2001">Chomsky, Noam. 2001. Derivation by phase. In M. Kenstowicz (ed.), <i>Ken Hale: A Life in Language</i>, 1–52. MIT Press.<span class="by">cited in <a data-go="ch2" data-to="s2-1">ch. 2 §2.1</a></span></li>
+        <li class="letter" style="text-indent:0;padding-left:0;border:0">H</li>
+        <li id="bib-holmberg2003">Holmberg, Anders &amp; Þorbjörg Hróarsdóttir. 2003. Agreement and movement in Icelandic raising constructions. <i>Lingua</i> 113(10): 997–1019.<span class="by">cited in <a data-go="ch2" data-to="s2-2">ch. 2 §2.2</a></span></li>
+        <li class="letter" style="text-indent:0;padding-left:0;border:0">P</li>
+        <li id="bib-polinsky2001">Polinsky, Maria &amp; Eric Potsdam. 2001. Long-distance agreement and topic in Tsez. <i>Natural Language &amp; Linguistic Theory</i> 19(3): 583–646.<span class="by">cited in <a data-go="ch4" data-to="s4-1">ch. 4 §4.1</a></span></li>
+        <li id="bib-preminger2014">Preminger, Omer. 2014. <i>Agreement and Its Failures</i>. MIT Press.<span class="by">cited in <a data-go="ch2" data-to="s2-2">ch. 2 §2.2</a></span></li>
+        <li class="letter" style="text-indent:0;padding-left:0;border:0">Z</li>
+        <li id="bib-zeijlstra2012">Zeijlstra, Hedde. 2012. There is only one way to agree. <i>The Linguistic Review</i> 29(3): 491–539.<span class="by">cited in <a data-go="ch2" data-to="s2-3">ch. 2 marginalia</a></span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="page" data-page="encyclopedia"><div class="single shelf">
+    <h1 class="title">The Encyclopedia</h1>
+    <div class="meta" id="enc-meta"></div>
+    <div class="enc-tools">
+      <input class="search enc-search" id="enc-q" placeholder="specify ahead…">
+      <div class="enc-feats"><span class="lbl">features</span>
+        <button class="chip" data-f="#" title="number">#</button><button class="chip" data-f="π" title="person">π</button><button class="chip" data-f="γ" title="gender / noun class">γ</button>
+      </div>
+    </div>
+    <div class="stack-head" id="stack-head">
+      <button data-k="name">Phenomenon</button><button data-k="lang">Language</button><button data-k="probe">Probe</button>
+      <button data-k="goal">Goal</button><button data-k="feats">Features</button><button data-k="block">Blockers</button>
+    </div>
+    <div class="stack" id="stack"></div>
+    <svg class="plank" id="plank" viewBox="0 0 1000 18" preserveAspectRatio="none"></svg>
+    <div class="legend"># number · π person · γ gender / noun class · — none known</div>
+  </div></section>
+
+  <section class="page" data-page="phen"><div class="single">
+    <p class="crumb"><a class="back" data-go="encyclopedia">← The Encyclopedia</a></p>
+    <h1 class="title" id="ph-title"></h1>
+    <div class="meta" id="ph-meta"></div>
+    <div class="card" id="ph-card"></div>
+    <article id="ph-body"></article>
+    <div class="chapnav" id="ph-nav"></div>
+  </div></section>
+
+  <section class="page" data-page="about"><div class="single">
+    <h1 class="title">About</h1>
+    <div class="meta">built from LaTeX sources</div>
+    <article><p>A working manuscript on the syntax of agreement, published chapter by chapter from its LaTeX sources.
+      Numbered examples are typeset from <i>expex</i>, trees from <i>forest</i>, and footnotes and marginal comments are set
+      beside the text rather than at the bottom of a page.</p></article>
+  </div></section>
+
+  <section class="page" data-page="stub"><div class="single">
+    <p class="crumb" id="stub-crumb"></p><h1 class="title" id="stub-title"></h1>
+    <div class="meta">not in this sketch</div>
+    <div class="placeholder">This chapter isn't drafted in the sketch. Try <a class="xref" data-go="ch2">Chapter 2</a> or <a class="xref" data-go="ch4">Chapter 4</a>.</div>
+  </div></section>
+
+  </main>
+</div>
+</div>
+
+<div class="pop" id="pop"></div>
+<button class="sidetog left" id="togleft" title="Toggle contents"><svg viewBox="0 0 20 16"><rect x="1" y="1" width="18" height="14" rx="1.5"/><rect class="fill" x="1" y="1" width="6" height="14"/></svg></button>
+<button class="sidetog right" id="togright" title="Toggle notes"><svg viewBox="0 0 20 16"><rect x="1" y="1" width="18" height="14" rx="1.5"/><rect class="fill" x="13" y="1" width="6" height="14"/></svg></button>
+
+<script>
+const pop=document.getElementById("pop"); let popT;
+const PARTS = [ // reading order: [heading, first chapter, last chapter]
+  ["The Mechanism",1,3],
+  ["Agreement at a Distance",4,6],
+  ["Limits",7,9],
+];
+const CATS = ["languages","properties","phenomena","theories"];
+const DOCS = [ // reading order: [id, title, category]
+  ["ch1","Introduction","theories"],
+  ["ch2","Agree and the Probe","theories"],
+  ["ch3","Features and Their Values","properties"],
+  ["ch4","Long-Distance Agreement","phenomena"],
+  ["ch5","Hindi-Urdu","languages"],
+  ["ch6","Icelandic","languages"],
+  ["ch7","Locality and Intervention","properties"],
+  ["ch8","Attraction Errors","phenomena"],
+  ["ch9","Cyclic Agree","theories"],
+];
+const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX"];
+const cap = w => w[0].toUpperCase()+w.slice(1);
+const META = {}; DOCS.forEach(([id,t,c],i)=>META[id]={title:t,cat:cap(c),n:i+1});
+const SYN = {
+  ch2:"An unvalued head searches downward for the closest matching goal and copies its values.",
+  ch4:"In Hindi-Urdu, a matrix verb can agree with the object of an embedded infinitive.",
+};
+let current="ch2", mode="order";
+
+/* ---------- gloss small caps: ERG → erg in small caps ---------- */
+document.querySelectorAll(".gloss .g").forEach(g=>{
+  g.innerHTML = g.textContent.replace(/(?<=[.\-])[A-Z]+\b|\b[A-Z]{2,}\b/g, m=>`<span class="sc">${m.toLowerCase()}</span>`);
+});
+
+/* ---------- sidebar ---------- */
+const side=document.getElementById("side");
+function renderSide(){
+  const q=document.getElementById("search").value.trim().toLowerCase();
+  const match=([id,t])=>!q||t.toLowerCase().includes(q);
+  const li=([id,t])=>`<li><a data-go="${id}" class="${id===current?"on":""}"><span class="n">${String(META[id].n).padStart(2,"0")}</span>${t}</a></li>`;
+  let h="";
+  if(mode==="order"){
+    PARTS.forEach(([name,a,b],i)=>{
+      const docs=DOCS.filter(d=>META[d[0]].n>=a && META[d[0]].n<=b && match(d));
+      if(docs.length) h+=`<h4><span class="rn">${ROMAN[i+1]}</span>${name}</h4><ol>${docs.map(li).join("")}</ol>`;
+    });
+  } else {
+    CATS.forEach((c,i)=>{
+      const docs=DOCS.filter(d=>d[2]===c && match(d));
+      if(docs.length) h+=`<h4>${cap(c)}</h4><ol>${docs.map(li).join("")}</ol>`;
+    });
+  }
+  side.innerHTML=h||`<div class="empty">nothing matches “${q}”</div>`;
+}
+document.getElementById("search").addEventListener("input",renderSide);
+function setMode(m){ mode=m; document.querySelectorAll("#sidemode button").forEach(b=>b.classList.toggle("on",b.dataset.mode===m)); renderSide(); }
+document.querySelectorAll("#sidemode button").forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+const menubtn=document.getElementById("menubtn");
+function setMenu(open){ document.body.classList.toggle("sideopen",open); menubtn.textContent=open?"× Contents":"☰ Contents"; }
+menubtn.onclick=()=>setMenu(!document.body.classList.contains("sideopen"));
+
+/* ---------- encyclopedia ---------- */
+const FEAT={"#":"number","π":"person","γ":"gender / noun class"};
+const PHEN=[ // placeholder entries
+  {id:"eng-sva",name:"English Subject-Verb Agreement",lang:"English",probe:"T",goal:"subject DPs",feats:["#","π"],block:"—",ch:"ch2",to:"s2-1",
+   desc:"The finite verb agrees in number and (residually) person with the subject. The textbook case of Agree: T probes its sister and finds the external argument in Spec,vP before it raises."},
+  {id:"hu-lda",name:"Hindi-Urdu Long-Distance Agreement",lang:"Hindi-Urdu",probe:"matrix T",goal:"unmarked embedded object",feats:["#","γ"],block:"ergative & dative DPs; CP boundaries",ch:"ch4",to:"s4-1",
+   desc:"A matrix verb agrees with the object of an embedded infinitive when nothing higher is available. Agreement on the infinitive and the matrix verb covaries."},
+  {id:"ice-dat",name:"Icelandic Dative Intervention",lang:"Icelandic",probe:"T",goal:"nominative DPs",feats:["#","π"],block:"dative experiencers",ch:"ch2",to:"s2-2",
+   desc:"A dative experiencer between T and a nominative blocks number agreement in expletive constructions; T surfaces with default singular."},
+  {id:"tsez-lda",name:"Tsez Long-Distance Agreement",lang:"Tsez",probe:"matrix v",goal:"topical absolutive in embedded clause",feats:["γ"],block:"non-topical absolutives",ch:"ch4",to:"s4-1",
+   desc:"A matrix verb can show the noun class of an absolutive inside its clausal complement, but only when that absolutive is the topic of the embedded clause."},
+  {id:"eng-attr",name:"English Agreement Attraction",lang:"English",probe:"T",goal:"subject DP (and, in error, embedded nouns)",feats:["#"],block:"—",ch:"ch8",
+   desc:"Speakers sometimes agree with a noun embedded inside the subject rather than its head: “the key to the cabinets are…”. Sensitive to hierarchical depth."},
+  {id:"kaq-af",name:"Kaqchikel Agent-Focus Agreement",lang:"Kaqchikel",probe:"Infl",goal:"the more marked of subject and object",feats:["π","#"],block:"—",ch:"ch9",
+   desc:"In agent-focus clauses a single agreement slot tracks whichever argument is first/second person or plural: an ‘omnivorous’ probe relativized to marked values."},
+  {id:"slo-cca",name:"Slovenian Closest-Conjunct Agreement",lang:"Slovenian",probe:"T",goal:"nearest conjunct of &P",feats:["γ","#"],block:"—",ch:"ch7",
+   desc:"With coordinated subjects, gender agreement can track the first or the last conjunct depending on word order, rather than resolving over the whole coordination."},
+  {id:"ar-vs",name:"Standard Arabic Partial Agreement",lang:"Arabic",probe:"T",goal:"post-verbal subject",feats:["π","γ"],block:"—",ch:"ch3",
+   desc:"In verb–subject order the verb agrees in person and gender but not number with a lexical subject; in subject–verb order agreement is full."},
+];
+// deterministic “hand-stacked” raggedness per volume
+function rng(seed){ let x=seed*9301+49297; return ()=>((x=(x*9301+49297)%233280)/233280); }
+PHEN.forEach((b,i)=>{ const r=rng(i+7);
+  b.l=Math.round(4+r()*30); b.r=Math.round(4+r()*38); b.h=Math.round(54+r()*16); b.label=r()>.62;
+  b.rot=((r()-.5)*1.6+(i%2?.25:-.25)).toFixed(2)+"deg"; b.seed=i+11; });
+// a hand-drawn spine outline in a 1000×100 box (stretched to the book; strokes stay crisp)
+function bookSVG(seed){
+  const r=rng(seed), j=n=>(r()-.5)*2*n, P=(x,y)=>`${x.toFixed(1)},${y.toFixed(1)}`;
+  const tl=[j(5)+5,j(4)+4], tr=[995+j(5),j(4)+4], br=[995+j(5),96+j(4)], bl=[j(5)+5,96+j(4)];
+  const edge=(a,b,bow)=>`Q${P((a[0]+b[0])/2+j(bow),(a[1]+b[1])/2+j(bow))} ${P(...b)}`;
+  const body=`M${P(...tl)} ${edge(tl,tr,3)} ${edge(tr,br,5)} ${edge(br,bl,3)} ${edge(bl,tl,5)}Z`;
+  const vline=x=>`M${P(x+j(1.5),8+j(3))} Q${P(x+j(2.5),50)} ${P(x+j(1.5),92+j(3))}`;
+  const lx=16+r()*6, rx=984-r()*6;
+  const bands=[vline(lx),vline(lx+7+r()*3),vline(rx),vline(rx-7-r()*3)].join(" ");
+  // a faint second pass over the outline, slightly off, like a pencil going round twice
+  const ghost=`M${P(tl[0]+j(3),tl[1]+j(2))} ${edge(tl,tr,4)} ${edge(tr,br,6)}`;
+  return `<path class="body" vector-effect="non-scaling-stroke" d="${body}"/><path class="line" vector-effect="non-scaling-stroke" d="${bands}"/><path class="ghost" vector-effect="non-scaling-stroke" d="${ghost}"/>`;
+}
+(function drawPlank(){ const r=rng(3), j=n=>(r()-.5)*2*n;
+  document.getElementById("plank").innerHTML=
+    `<path vector-effect="non-scaling-stroke" stroke-width="1.4" d="M0,${4+j(1)} Q250,${4+j(2)} 500,${4+j(1.5)} T1000,${4+j(1)}"/>`+
+    `<path vector-effect="non-scaling-stroke" stroke-width="1" d="M8,${12+j(1)} Q300,${12+j(2)} 600,${12+j(1.5)} T992,${12+j(1)}"/>`+
+    `<path vector-effect="non-scaling-stroke" stroke-width="1" d="M30,12 L22,18 M970,12 L978,18"/>`; })();
+let encSort={k:null,desc:false}, encFeats=new Set();
+const stack=document.getElementById("stack");
+function cellText(b,k){ return k==="feats"?b.feats.join(", "):b[k]; }
+function renderStack(){
+  stack.innerHTML=PHEN.map(b=>`<a class="book${b.label?" label":""}" tabindex="0" data-go="ph:${b.id}" data-id="${b.id}"
+    style="--l:${b.l}px;--r:${b.r}px;--h:${b.h}px;--rot:${b.rot}">
+    <svg class="outline" viewBox="0 0 1000 100" preserveAspectRatio="none">${bookSVG(b.seed)}</svg>
+    <span class="cell name"><span>${b.name}</span></span>
+    <span class="cell" data-label="language">${b.lang}</span>
+    <span class="cell" data-label="probe">${b.probe}</span>
+    <span class="cell" data-label="goal">${b.goal}</span>
+    <span class="cell feats" data-label="features">${b.feats.join(", ")}</span>
+    <span class="cell${b.block==="—"?" dim":""}" data-label="blockers">${b.block}</span></a>`).join("")+`<div class="empty" style="display:none">no volume matches</div>`;
+  restack(false);
+}
+function restack(animate=true){
+  const books=[...stack.querySelectorAll(".book")];
+  const first=new Map(books.map(el=>[el,el.getBoundingClientRect()]));
+  const q=document.getElementById("enc-q").value.trim().toLowerCase();
+  let shown=0;
+  books.forEach(el=>{ const b=PHEN.find(x=>x.id===el.dataset.id);
+    const hit=(!q||[b.name,b.lang,b.probe,b.goal,b.block].join(" ").toLowerCase().includes(q)) && [...encFeats].every(f=>b.feats.includes(f));
+    el.classList.toggle("gone",!hit); if(hit) shown++; });
+  const order=[...PHEN];
+  if(encSort.k) order.sort((a,b)=>cellText(a,encSort.k).localeCompare(cellText(b,encSort.k))*(encSort.desc?-1:1));
+  order.forEach(b=>stack.insertBefore(stack.querySelector(`[data-id="${b.id}"]`),stack.querySelector(".empty")));
+  stack.querySelector(".empty").style.display=shown?"none":"block";
+  document.getElementById("enc-meta").textContent=`${shown} of ${PHEN.length} volumes · click a spine to open it · click a heading to restack`;
+  if(!animate) return;
+  books.forEach(el=>{ if(el.classList.contains("gone")) return; const a=first.get(el), b=el.getBoundingClientRect();
+    if(!a.height) return; const dy=a.top-b.top; if(!dy) return;
+    el.animate([{translate:`0 ${dy}px`},{translate:"0 0"}],{duration:420,easing:"cubic-bezier(.2,.7,.3,1)"}); });
+}
+document.querySelectorAll("#stack-head button").forEach(btn=>btn.onclick=()=>{
+  const k=btn.dataset.k;
+  encSort = encSort.k!==k ? {k,desc:false} : encSort.desc ? {k:null,desc:false} : {k,desc:true};  // asc → desc → original
+  document.querySelectorAll("#stack-head button").forEach(x=>{ x.classList.toggle("on",x.dataset.k===encSort.k); x.classList.toggle("desc",x.dataset.k===encSort.k&&encSort.desc); });
+  restack();
+});
+document.getElementById("enc-q").addEventListener("input",()=>restack());
+document.querySelectorAll(".enc-feats .chip").forEach(c=>c.onclick=()=>{
+  const f=c.dataset.f; encFeats.has(f)?encFeats.delete(f):encFeats.add(f); c.classList.toggle("on",encFeats.has(f)); restack(); });
+stack.addEventListener("keydown",e=>{ if(e.key==="Enter"&&e.target.closest(".book")) e.target.click(); });
+
+function renderPhen(pid){
+  const i=PHEN.findIndex(b=>b.id===pid), b=PHEN[i];
+  document.getElementById("ph-title").textContent=b.name;
+  document.getElementById("ph-meta").textContent=`phenomenon · volume ${String(i+1).padStart(2,"0")} of ${String(PHEN.length).padStart(2,"0")}`;
+  const ch=META[b.ch];
+  document.getElementById("ph-card").innerHTML=`<div class="spine"></div><dl>
+    <dt>language</dt><dd>${b.lang}</dd><dt>probe</dt><dd>${b.probe}</dd><dt>goal</dt><dd>${b.goal}</dd>
+    <dt>features</dt><dd>${b.feats.map(f=>`${f} <span style="color:var(--muted);font-size:15px">${FEAT[f]}</span>`).join(" &nbsp;·&nbsp; ")}</dd>
+    <dt>blockers</dt><dd>${b.block==="—"?'<span style="color:var(--muted)">none known</span>':b.block}</dd>
+    <dt>discussed in</dt><dd><a class="xref" data-go="${b.ch}"${b.to?` data-to="${b.to}"`:""}>Chapter ${ch.n} · ${ch.title}</a></dd></dl>`;
+  document.getElementById("ph-body").innerHTML=`<p>${b.desc}</p>`;
+  const prev=PHEN[i-1], next=PHEN[i+1];
+  document.getElementById("ph-nav").innerHTML=(prev?`<a data-go="ph:${prev.id}">← <i>${prev.name}</i></a>`:"<span></span>")+(next?`<a data-go="ph:${next.id}"><i>${next.name}</i> →</a>`:"<span></span>");
+}
+
+/* ---------- navigation ---------- */
+function go(id,to){
+  let page=id;
+  if(id.startsWith("ph:")){ page="phen"; renderPhen(id.slice(3)); }
+  else if(!document.querySelector(`.page[data-page="${id}"]`)){
+    page="stub"; const m=META[id];
+    document.getElementById("stub-crumb").textContent=`${m.cat} · Chapter ${m.n}`;
+    document.getElementById("stub-title").textContent=m.title;
+  }
+  const same = id===current;
+  current=id;
+  document.querySelectorAll(".page").forEach(p=>p.classList.toggle("on",p.dataset.page===page));
+  const tab = META[id]? "machinery" : id.startsWith("ph:")? "encyclopedia" : id;
+  document.querySelectorAll("nav.tabs a").forEach(a=>a.classList.toggle("on",a.dataset.tab===tab));
+  document.body.classList.toggle("noside",!META[id]); setMenu(false); setHdr();
+  document.body.classList.toggle("nonotes",!document.querySelector(`.page[data-page="${page}"] .note`));
+  renderSide(); layoutWide(); layoutNotes();
+  if(to){ const el=document.getElementById(to); if(el){ el.scrollIntoView({behavior: same?"smooth":"instant", block:"start"});
+      if(el.matches(".ex,figure,li")){ el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); } } }
+  else if(!same) window.scrollTo({top:0,behavior:"instant"});
+}
+document.addEventListener("click",e=>{
+  const a=e.target.closest("[data-go],[data-ex],[data-bib],[data-top]");
+  if(!a) return;
+  e.preventDefault(); hidePop();
+  if(a.dataset.top){ window.scrollTo({top:0,behavior:"smooth"}); return; }
+  if(a.dataset.bib) return go("bibliography","bib-"+a.dataset.bib);
+  if(a.dataset.ex){ const ch=a.dataset.ex.split("-")[0]; return go(ch,a.dataset.ex); }
+  go(a.dataset.go,a.dataset.to);
+});
+
+/* ---------- sidenotes (LessWrong-style alignment) ---------- */
+/* ---------- corner toggles for the two sidebars ---------- */
+const togL=document.getElementById("togleft"), togR=document.getElementById("togright");
+const narrow=()=>matchMedia("(max-width:980px)").matches;
+function setLeft(open){
+  if(narrow()) return setMenu(open);
+  document.body.classList.toggle("hideleft",!open); togL.classList.toggle("off",!open);
+  layoutWide(); layoutNotes();
+}
+function setRight(open){
+  document.body.classList.toggle("hideright",!open); togR.classList.toggle("off",!open);
+  if(open) hidePop();
+  layoutWide(); layoutNotes();
+}
+togL.onclick=()=>setLeft(narrow()? !document.body.classList.contains("sideopen") : document.body.classList.contains("hideleft"));
+togR.onclick=()=>setRight(document.body.classList.contains("hideright"));
+function openNote(key){
+  setRight(true);
+  const n=document.querySelector(`.page.on .note[data-n="${key}"]`); if(!n) return;
+  n.scrollIntoView({behavior:"smooth",block:"center"});
+  hot(key,true); setTimeout(()=>hot(key,false),1400);
+}
+document.addEventListener("click",e=>{
+  const r=e.target.closest(".page.on .ref"); if(!r) return;
+  const key=r.dataset.r;
+  // touch screens: first tap previews, second tap opens
+  if(document.body.classList.contains("hideright") && pop.dataset.note!==key){ showNotePop(r); return; }
+  openNote(key);
+});
+pop.addEventListener("click",()=>{ if(pop.dataset.note) openNote(pop.dataset.note); });
+pop.addEventListener("mouseleave",()=>{ if(pop.dataset.note) hidePop(); });
+function showNotePop(r){
+  const n=document.querySelector(`.page.on .note[data-n="${r.dataset.r}"]`); if(!n) return;
+  const isCom=n.classList.contains("com");
+  showPop(r,`<div class="pk">${isCom?"Comment":"Footnote "+n.querySelector(".k").textContent}</div>${n.querySelector("div").innerHTML.replace(/<br><span class="tag">.*?<\/span>/,"")}<span class="hint">click to open notes →</span>`);
+  pop.classList.add("note-pop"); pop.dataset.note=r.dataset.r;
+}
+document.addEventListener("mouseover",e=>{
+  const r=e.target.closest(".page.on .ref"); if(!r || !document.body.classList.contains("hideright")) return;
+  clearTimeout(popT); popT=setTimeout(()=>showNotePop(r),120);
+});
+document.addEventListener("mouseout",e=>{
+  const r=e.target.closest(".page.on .ref"); if(!r || !pop.dataset.note) return;
+  clearTimeout(popT);
+  if(e.relatedTarget && pop.contains(e.relatedTarget)) return; // moving into the preview
+  setTimeout(()=>{ if(!pop.matches(":hover")) hidePop(); },120);
+});
+
+function layoutWide(){
+  const page=document.querySelector(".page.on"); if(!page) return;
+  const els=[...page.querySelectorAll("article .ex, article figure.tree")];
+  els.forEach(e=>{ e.style.width=""; e.classList.remove("wide"); });
+  const margin=page.querySelector(".margin"), note=margin&&margin.querySelector(".note");
+  if(!note || getComputedStyle(note).position==="static") return; // single-column: wrap normally
+  const limit=(document.body.classList.contains("hideright")?document.getElementById("pages"):margin).getBoundingClientRect().right;
+  els.forEach(e=>{
+    const r=e.getBoundingClientRect(); let need;
+    if(e.matches("figure")) need=44+(+e.querySelector("svg").getAttribute("width"))+22;
+    else { e.style.width="max-content"; need=e.getBoundingClientRect().width; e.style.width=""; } // natural one-line width
+    if(need>r.width+1){ e.style.width=Math.min(need,limit-r.left)+"px"; e.classList.add("wide"); }
+  });
+}
+function layoutNotes(){
+  const page=document.querySelector(".page.on"); if(!page) return;
+  const margin=page.querySelector(".margin"); if(!margin) return;
+  if(getComputedStyle(margin.querySelector(".note")||margin).position==="static") return;
+  const mTop=margin.getBoundingClientRect().top;
+  let last=margin.querySelector(".chips").offsetTop+margin.querySelector(".chips").offsetHeight+14;
+  const blocks=[...page.querySelectorAll("article .wide")].map(e=>{ const r=e.getBoundingClientRect(); return [r.top-mTop-10, r.bottom-mTop+14]; });
+  margin.querySelectorAll(".note:not(.hidden)").forEach(n=>{
+    const r=page.querySelector(`[data-r="${n.dataset.n}"]`);
+    const anchor=r.getBoundingClientRect().top-mTop-6;
+    let t=Math.max(anchor,last); const h=n.offsetHeight;
+    for(let moved=true,i=0;moved&&i<10;i++){ moved=false;
+      for(const [a,b] of blocks) if(t<b && t+h>a){
+        t = (anchor<a && a-h>=last) ? a-h : b;  // marker above the example: sit above it if there's room
+        moved=true; } }
+    n.style.top=t+"px"; last=t+h+16;
+  });
+  margin.style.minHeight=last+"px";
+}
+document.querySelectorAll(".margin .chip").forEach(c=>c.onclick=()=>{
+  c.classList.toggle("on");
+  const m=c.closest(".margin"), on=c.classList.contains("on");
+  m.querySelectorAll(".note."+c.dataset.kind).forEach(n=>n.classList.toggle("hidden",!on));
+  document.querySelectorAll(`.page.on .ref${c.dataset.kind==="com"?".com":":not(.com)"}`).forEach(r=>r.style.visibility=on?"":"hidden");
+  layoutNotes();
+});
+function hot(key,on){ document.querySelectorAll(`.page.on [data-n="${key}"], .page.on [data-r="${key}"], .page.on [data-a="${key}"]`).forEach(x=>x.classList.toggle("hot",on)); }
+document.querySelectorAll("[data-r],[data-a],.note").forEach(el=>{
+  const key=el.dataset.r||el.dataset.a||el.dataset.n;
+  el.addEventListener("mouseenter",()=>hot(key,true)); el.addEventListener("mouseleave",()=>hot(key,false));
+});
+function setHdr(){
+  const m=document.querySelector("header.top").offsetHeight, t=document.querySelector(".toolbarbar").offsetHeight;
+  document.documentElement.style.setProperty("--mast",m+"px");
+  document.documentElement.style.setProperty("--hdr",(m+t)+"px");
+}
+window.addEventListener("resize",()=>{ setHdr(); layoutWide(); layoutNotes(); }); setHdr();
+
+/* ---------- hover previews ---------- */
+function showPop(a,html){
+  pop.innerHTML=html; pop.style.display="block";
+  const r=a.getBoundingClientRect();
+  let left=Math.min(r.left+window.scrollX, window.scrollX+document.documentElement.clientWidth-pop.offsetWidth-16);
+  pop.style.left=Math.max(8,left)+"px"; pop.style.top=(r.bottom+window.scrollY+8)+"px";
+}
+function hidePop(){ pop.style.display="none"; pop.classList.remove("note-pop"); delete pop.dataset.note; }
+document.addEventListener("mouseover",e=>{
+  const a=e.target.closest(".xref,.cite"); if(!a) return;
+  clearTimeout(popT); popT=setTimeout(()=>{
+    if(a.dataset.ex){
+      const ex=document.getElementById(a.dataset.ex); const ch=META[a.dataset.ex.split("-")[0]];
+      const clone=ex.cloneNode(true); clone.removeAttribute("id"); clone.removeAttribute("style"); clone.classList.remove("flash","wide");
+      showPop(a,`<div class="pk">Chapter ${ch.n} · ${ch.title}</div>`+clone.outerHTML);
+    } else if(a.dataset.bib){
+      const li=document.getElementById("bib-"+a.dataset.bib).cloneNode(true); li.querySelector(".by")?.remove();
+      showPop(a,`<div class="pk">Bibliography</div><div>${li.innerHTML}</div>`);
+    } else if(a.dataset.go && META[a.dataset.go]){
+      const m=META[a.dataset.go]; let sec="";
+      if(a.dataset.to){ const h=document.getElementById(a.dataset.to); if(h) sec=` · §${h.textContent}`; }
+      showPop(a,`<div class="pk">${m.cat} · Chapter ${m.n}${sec}</div><div class="pt">${m.title}</div><div>${SYN[a.dataset.go]||"<i>Not yet drafted.</i>"}</div>`);
+    }
+  },180);
+});
+document.addEventListener("mouseout",e=>{ if(e.target.closest(".xref,.cite")){ clearTimeout(popT); hidePop(); } });
+
+/* ---------- forest-style tree renderer ---------- */
+const ctx=document.createElement("canvas").getContext("2d");
+function tw(t,size,italic){ ctx.font=`${italic?"italic ":""}${size}px "EB Garamond"`; return ctx.measureText(t).width; }
+function parse(s){
+  const toks=s.match(/\[|\]|\{[^}]*\}|[^\s\[\]]+/g); let i=0;
+  function node(){
+    i++; // [
+    let label=toks[i]; i++;
+    const n={kids:[]};
+    let feat=null; if(label.includes("|")){ [label,feat]=label.split("|"); feat=feat.replace(/·/g," · ").replace(/:/g,": "); }
+    if(label.startsWith("^")){ n.tri=true; label=label.slice(1); }
+    const idm=label.match(/#(\w+)$/); if(idm){ n.id=idm[1]; label=label.replace(/#\w+$/,""); }
+    n.label=label; n.feat=feat;
+    while(toks[i]!=="]"){
+      if(toks[i]==="[") n.kids.push(node());
+      else { n.kids.push({label:toks[i].replace(/[{}]/g,""),leaf:true,kids:[]}); i++; }
+    }
+    i++; return n;
+  }
+  return node();
+}
+function labelW(n){
+  const [b,sub]=n.label.split("_"); const s=n.leaf?17:17.5;
+  let w=tw(b,s,n.leaf)+(sub?tw(sub.replace(/[{}]/g,""),12,true)+2:0);
+  if(n.feat){ ctx.font='10.5px "IBM Plex Mono"'; w=Math.max(w,ctx.measureText(n.feat).width); }
+  return w;
+}
+const GAP=22, LEV=60;
+function size(n){ n.lw=labelW(n); n.h=n.feat?34:20; n.kids.forEach(size);
+  const kw=n.kids.reduce((a,k)=>a+k.w,0)+GAP*Math.max(0,n.kids.length-1); n.w=Math.max(n.lw,kw); }
+function place(n,x,d){ n.y=d*LEV;
+  if(n.kids.length){ const kw=n.kids.reduce((a,k)=>a+k.w,0)+GAP*(n.kids.length-1); let cx=x+(n.w-kw)/2;
+    n.kids.forEach(k=>{place(k,cx,d+1);cx+=k.w+GAP}); n.x=(n.kids[0].x+n.kids[n.kids.length-1].x)/2; }
+  else n.x=x+n.w/2; }
+function drawTree(svg){
+  const root=parse(svg.dataset.tree); size(root); place(root,0,0);
+  const all=[]; (function walk(n){all.push(n);n.kids.forEach(walk)})(root);
+  const ids={}; all.forEach(n=>{if(n.id)ids[n.id]=n});
+  const maxY=Math.max(...all.map(n=>n.y+n.h));
+  const P=24; let out="";
+  all.forEach(n=>{
+    n.kids.forEach(k=>{
+      if(n.tri && k.leaf) out+=`<polygon points="${n.x},${n.y+n.h} ${k.x-k.lw/2-2},${k.y-2} ${k.x+k.lw/2+2},${k.y-2}"/>`;
+      else out+=`<line x1="${n.x}" y1="${n.y+n.h}" x2="${k.x}" y2="${k.y-2}"/>`;
+    });
+    const [b,sub]=n.label.split("_");
+    out+=`<text x="${n.x}" y="${n.y+14}" text-anchor="middle" class="${n.leaf?"leaf":""}" font-size="${n.leaf?17:17.5}">${b}${sub?`<tspan font-size="12" font-style="italic" dy="4">${sub.replace(/[{}]/g,"")}</tspan>`:""}</text>`;
+    if(n.feat) out+=`<text x="${n.x}" y="${n.y+29}" text-anchor="middle" class="feat">${n.feat}</text>`;
+  });
+  let extra=0;
+  (svg.dataset.arrows||"").split(",").filter(Boolean).forEach(spec=>{
+    const [pair,lab,route]=spec.split(":"); const [a,b]=pair.split(">").map(k=>ids[k]);
+    const sx=a.x, sy=a.y+a.h+3; let ex,ey,cy,d;
+    if(route==="low"){ // run beneath the terminal string, end under the goal's word
+      const t=(b.kids.length===1&&b.kids[0].leaf)?b.kids[0]:b; ex=t.x; ey=t.y+t.h+6; cy=maxY+46;
+      d=`M${sx},${sy} C${sx},${cy} ${ex},${cy} ${ex},${ey}`;
+    } else {
+      const dir=b.x>a.x?-1:1; ex=b.x+dir*(b.lw/2+6); ey=b.y+10; cy=Math.max(sy,ey)+40;
+      d=`M${sx},${sy} C${sx},${cy} ${ex+dir*40},${ey} ${ex},${ey}`;
+    }
+    out+=`<path class="agree" d="${d}" marker-end="url(#ah)"/>`;
+    if(lab) out+=`<text class="alabel" x="${(sx+ex)/2}" y="${route==="low"?cy-10:cy-4}" text-anchor="middle">${lab}</text>`;
+    extra=Math.max(extra,cy-maxY+10);
+  });
+  const W=root.w+P*2, H=maxY+Math.max(extra,0)+P;
+  svg.setAttribute("viewBox",`${-P} -4 ${W} ${H}`); svg.setAttribute("width",W); svg.setAttribute("height",H);
+  svg.innerHTML=`<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2A3A63"/></marker></defs>`+out;
+}
+
+renderStack();
+document.fonts.ready.then(()=>{
+  document.querySelectorAll("svg[data-tree]").forEach(drawTree);
+  go("ch2"); setTimeout(()=>{ layoutWide(); layoutNotes(); },50);
+});
+</script>
+</body>
+</html>

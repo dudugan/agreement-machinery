@@ -1,0 +1,130 @@
+%% title: MTSMs in Python
+%% category: theories
+
+\begin{abstract}
+A working implementation of the MTSM: a transducer that values each mother node from its two daughters, one feature tier at a time, plus two evaluators that check whether a tree could have been built that way. Every code block on this page can be run in the browser.
+\end{abstract}
+\label{ch:mtsm}
+
+\section{The implementation}\label{sec:mtsm-code}
+
+The code below builds trees bottom-up from a stream of left daughters. Each mother's value on each tier (person, number, gender) is computed by a transition function $\tau$ from its daughters' values on that tier alone. Fold any indented block with the arrows in the gutter, or press \textbf{run} to load it into a Python session for this page.\footnote{Python runs entirely in your browser, using Pyodide. The first run downloads it, about 10\,MB; after that it is cached.}
+
+\begin{minted}{python}
+### MTSM implementation in Python
+
+tier_list = ['person', 'number', 'gender'] 
+
+# A syntactic node. 
+class snode:
+    def __init__(self, left=None, right=None, mother=None):
+        self.vals = {} # list of tier values
+        for tier in tier_list:
+            self.vals[tier] = None
+        self.left = left # left daughter
+        self.right = right # right daughter
+        self.mother = mother # mother
+    def __repr__(self):
+        return f"snode(vals={self.vals!r})"
+
+# A transducer which gives values to non-terminals, given a transition function. 
+def run_mtsm(input_stream, tau):
+    output_stream = []
+    right = None; # assumes the bottommost right node is a lexical root unvalued for any features.
+    for left in reversed(input_stream):
+        mother = tau(left, right) # tau is the transition function
+        output_stream.insert(0, right)
+        output_stream.insert(0, left)
+        right = mother
+    output_stream.insert(0, right)
+    return output_stream
+
+    # Input: list of left nodes from top to bottom
+    # Output: list of nodes in "right[left right[left right[...]]]" order (all right daughters are even-indexed). 
+
+    # Important: treats specifiers as terminals, and assumes this process has already run on them. 
+    # Important: assumes the strict LCA, and operates over constituency trees, not dependency trees.
+
+# A helper to retrieve the value of a given tier on a given node. 
+def val(node, tier):
+    return None if node is None else node.vals[tier]
+
+# A helper to check that a tree is well-formed. 
+def validate_tree(tree):
+    if len(tree) % 2 == 0: raise ValueError('tree has even number of nodes')
+    if any(val(tree[-1], t) is not None for t in tier_list):
+        raise ValueError('bottom right node is not empty')
+
+# An evaluator which checks if a given tree could have been created with an MTSM or not, given a specific tau. 
+def eval_tauful(tree, tau):
+    validate_tree(tree)
+    for i in range(0, len(tree)-1, 2):
+        mother, left, right = tree[i], tree[i+1], tree[i+2]
+        if any(tau(left, right).vals[t] != val(mother, t) for t in tier_list):
+            return False
+    return True
+
+# An evaluator which checks if there exists a possible tau that could have created this MTSM. 
+def eval_tauless(tree):
+    validate_tree(tree)
+    seen = {} # dict of tier, leftval, rightval -> motherval, to enforce independence
+    for i in range(0, len(tree)-1, 2):
+        mother, left, right = tree[i], tree[i+1], tree[i+2]
+        for tier in tier_list:
+            l, r, m = val(left, tier), val(right, tier), val(mother, tier)
+            if m != l and m != r: 
+                return False # check conservation
+            if seen.setdefault((tier, l, r), m) != m: 
+                return False # check independence
+    return True
+
+# An example tau, which first checks a person feature hierarchy, and then defaults to the left node's feature unless it's unvalued. (This tau is associative.)
+person_hierarchy = {'1': 0, '2': 1, '3': 2}
+def tau(left, right):
+    mother = snode(left, right)
+    for t in tier_list:
+        l, r = val(left, t), val(right, t)
+        if l is None or r is None:
+            mother.vals[t] = r if l is None else l
+        elif t == 'person' and person_hierarchy[r] < person_hierarchy[l]:
+            mother.vals[t] = r
+        else: 
+            mother.vals[t] = l
+    return mother
+\end{minted}
+
+\section{Trying it out}\label{sec:mtsm-try}
+
+Build an input stream below and press \textbf{run}. Each row is a left daughter, from the top of the tree to the bottom; leave a tier at -- for an unvalued feature. The form starts with a third-person plural subject above a first-person singular object, so the person hierarchy lets the object's [1] win at every mother above it.
+
+\begin{nodestream}[person=1/2/3, number=sg/pl, gender=m/f]
+C
+subject: person=3, number=pl
+T
+object: person=1, number=sg, gender=f
+\end{nodestream}
+
+\begin{minted}{python}
+# stream_data comes from the form: one dict per left daughter, top to bottom
+stream = []
+for row in stream_data:
+    n = snode()
+    n.vals.update({t: row[t] for t in tier_list if row.get(t)})
+    stream.append(n)
+
+tree = run_mtsm(stream, tau)
+
+for i, n in enumerate(tree):
+    if i % 2:
+        name = stream_data[i // 2]['label'] or f'left {i // 2 + 1}'
+    else:
+        name = 'mother' if n is not None else '(root)'
+    vals = ', '.join(f'{t}={v}' for t, v in n.vals.items() if v) if n else ''
+    print(f'{i:>2}  {name:<12} {vals or "–"}')
+
+print()
+print('built by this tau?   ', eval_tauful(tree, tau))
+print('built by some tau?   ', eval_tauless(tree))
+\end{minted}
+
+The two evaluators answer different questions: \texttt{eval\_tauful} asks whether \emph{this} $\tau$ built the tree, while \texttt{eval\_tauless} asks whether \emph{any} conservative, tier-independent $\tau$ could have.\comment{Add a tree here once the MTSM diagrams are drawn.}
