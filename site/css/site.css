@@ -416,3 +416,5 @@ code,.tt{font-family:var(--mono);font-size:.84em;background:#E9E1CE;border:1px s
   .nf-grid{grid-template-columns:18px minmax(70px,1fr) repeat(var(--n),minmax(48px,1fr)) auto;gap:4px 5px}
   .nf-act .nfb[data-nf="up"],.nf-act .nfb[data-nf="down"]{display:none}
 }
+
+.side ol.untitled{margin-bottom:6px}

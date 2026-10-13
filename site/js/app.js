@@ -49,8 +49,8 @@ const conv=s=>LaTeX.convert(s||"", st, {}, "inline");
 PHEN.forEach(p=>{ const m=p.doc.meta;
   p.name=conv(m.name||p.id); p.lang=conv(m.language||""); p.probe=conv(m.probe||""); p.goal=conv(m.goal||"");
   p.featsRaw=(m.features||"").split(",").map(s=>s.trim()).filter(Boolean); p.feats=p.featsRaw.map(conv); p.featText=p.feats.map(strip);
-  const none=!m.blockers || /^(--+|—|–|none|-)$/.test(m.blockers.trim());
-  p.block=none?"—":conv(m.blockers); p.noBlock=none;
+  const none=/^(--+|—|–|none|-)$/.test((m.blockers||"").trim());
+  p.block=none?"—":conv(m.blockers||""); p.noBlock=none;
   p.discussed=(m.discussed||"").split(",").map(s=>s.trim()).filter(Boolean);
 });
 const docOf=id=>META[id]?.doc;
@@ -113,7 +113,8 @@ function renderSide(){
   const match=([id,t])=>!q||t.toLowerCase().includes(q)||strip(SYN[id]||"").toLowerCase().includes(q);
   const li=([id,t])=>`<li><a data-go="${id}" class="${id===current?"on":""}${META[id].stub?" stub":""}"><span class="n">${pad(META[id].n)}</span>${t}</a></li>`;
   let h="";
-  if(mode==="order") PARTS.forEach((name,i)=>{ const docs=DOCS.filter(d=>META[d[0]].part===i && match(d)); if(docs.length) h+=`<h4><span class="rn">${ROMAN[i+1]}</span>${name}</h4><ol>${docs.map(li).join("")}</ol>`; });
+  if(mode==="order"){ let rn=0; PARTS.forEach((name,i)=>{ if(name) rn++; const docs=DOCS.filter(d=>META[d[0]].part===i && match(d));
+    if(docs.length) h+=`${name?`<h4><span class="rn">${ROMAN[rn]}</span>${name}</h4>`:""}<ol${name?"":' class="untitled"'}>${docs.map(li).join("")}</ol>`; }); }
   else CATS.forEach(c=>{ const docs=DOCS.filter(d=>d[2]===c && match(d)); if(docs.length) h+=`<h4>${cap(c)}</h4><ol>${docs.map(li).join("")}</ol>`; });
   side.innerHTML=h||`<div class="empty">nothing matches “${LaTeX.esc(q)}”</div>`;
 }
@@ -150,6 +151,7 @@ function bookSVG(seed){
 const allFeats=[...new Set(PHEN.flatMap(p=>p.featText))];
 $("#enc-feats").innerHTML=`<span class="lbl">features</span>`+allFeats.map(f=>`<button class="chip" data-f="${LaTeX.esc(f)}" title="${LaTeX.esc(FEAT[f]||"")}">${LaTeX.esc(f)}</button>`).join("");
 $("#enc-legend").textContent=[...allFeats.map(f=>`${f} ${FEAT[f]||""}`.trim()),"— none known"].join(" · ");
+if(!allFeats.length) $("#enc-feats").style.visibility="hidden";
 let encSort={k:null,desc:false}, encFeats=new Set();
 const stack=$("#stack");
 const cellText=(b,k)=>k==="feats"?b.featText.join(", "):strip(b[k]);
