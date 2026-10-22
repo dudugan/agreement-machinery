@@ -449,3 +449,18 @@ mark.rq.hot{background:rgba(30,84,88,.16)}
 .rc-toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);max-width:min(560px,calc(100vw - 32px));background:var(--ink);color:#F4EEDF;
   font-size:15px;line-height:1.45;padding:10px 16px;border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:.25s;z-index:90}
 .rc-toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* reader note form */
+.rc-form{position:absolute;z-index:80;background:var(--paper);border:1px solid var(--tan);border-radius:6px;box-shadow:0 8px 28px rgba(50,35,15,.22);padding:12px;display:flex;flex-direction:column;gap:8px}
+.rc-form[hidden]{display:none}
+.rf-quote{font-style:italic;color:var(--muted);font-size:14.5px;line-height:1.4;border-left:2px solid var(--accent);padding-left:8px}
+.rf-name,.rf-body{font:inherit;font-size:15.5px;background:#FBF8F0;border:1px solid var(--rule);border-radius:4px;padding:6px 8px;color:var(--ink);width:100%;resize:vertical}
+.rf-name:focus,.rf-body:focus{outline:none;border-color:var(--accent)}
+.rf-bar{display:flex;align-items:center;gap:8px}
+.rf-msg{flex:1;font-size:13px;color:var(--muted);line-height:1.3}
+.rf-cancel,.rf-post{font:inherit;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;border-radius:4px;padding:5px 10px;cursor:pointer}
+.rf-cancel{background:none;border:1px solid transparent;color:var(--muted)}
+.rf-cancel:hover{color:var(--ink)}
+.rf-post{background:var(--accent);color:#F4EEDF;border:1px solid var(--accent)}
+.rf-post:disabled{opacity:.5;cursor:default}
+.note.reader .who{font-size:13.5px;color:var(--ink)}

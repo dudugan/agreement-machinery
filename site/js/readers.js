@@ -1,15 +1,21 @@
-/* readers.js — reader comments, stored as GitHub Discussions.
+/* readers.js — reader notes in the margin, stored in Supabase (the same approach as Invisible Cities).
  *
- * Posting: select a passage in a chapter and press "Comment". That opens a new GitHub Discussion with the
- * passage quoted and a hidden marker recording where it came from; the reader writes their note on GitHub.
- * Showing: when the site is published, a GitHub Action collects those discussions into comments.json.
- * Each one is drawn in the margin beside its passage, as a comment (it shares the Comments filter), with
- * the discussion's replies underneath. Moderate by deleting or hiding comments on GitHub.
+ * Select a passage in a chapter, press "Comment", write a note, post it. Notes live in one Supabase table,
+ * `notes` (see SUPABASE.md), read and written straight from the page with the project's public key; the
+ * table's row-level security only lets that key read approved notes and add new ones. Each note is drawn
+ * in the margin beside its passage, under the Comments filter. To hide a note, set its status to 'hidden'
+ * in the Supabase table editor.
+ *
+ * Until manifest.json has a Supabase URL and key, notes are kept in this browser only (localStorage),
+ * so everything can be tried out locally.
  */
 (function(){
 "use strict";
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-let CFG=null;
+let CFG={}, RELAYOUT=()=>{};
+const LOCAL_KEY="am-reader-notes", NAME_KEY="am-reader-name";
+const remote=()=>!!(CFG.supabaseUrl && CFG.supabaseKey);
+const store={ get(k,d){ try{ return JSON.parse(localStorage.getItem(k)) ?? d; }catch(_){ return d; } }, set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(_){} } };
 
 /* ---------- article text with whitespace collapsed, mapped back to text nodes ---------- */
 const SKIP=".ref, .dg, .conn-layer, .gut, .code-bar, .code-out, .nodeform, .no, .chapnav, .crumb, .meta, .rc-btn";
@@ -55,100 +61,141 @@ function highlight(tm, start, end, id){
   return last;
 }
 
-/* ---------- draw the comments ---------- */
+/* ---------- draw notes ---------- */
 const fmtDate=d=>new Date(d).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
-function person(p){ return `<a class="who" href="${esc(p.url)}" target="_blank" rel="noopener">${p.avatar?`<img class="av" src="${esc(p.avatar)}&s=40" alt="" loading="lazy">`:""}${esc(p.login)}</a>`; }
-function noteHTML(c, id, moved){
-  const replies=c.replies.map(r=>`<div class="rc-reply">${person(r.author)} <span class="when">${fmtDate(r.date)}</span><div class="rc-body">${r.html}</div></div>`).join("");
+const bodyHTML=t=>esc(t).split(/\n{2,}/).map(p=>`<p>${p.replace(/\n/g,"<br>")}</p>`).join("");
+function noteHTML(n, id, moved){
   return `<div class="note com reader" data-n="${id}"><span class="k">◆</span><div>
-    <div class="rc-head">${person(c.author)} <span class="when">${fmtDate(c.date)}</span></div>
-    ${moved?`<blockquote class="rc-moved" title="This passage has since changed">${esc(c.quote)}</blockquote>`:""}
-    <div class="rc-body">${c.html}</div>${replies}
-    <a class="rc-gh" href="${esc(c.url)}" target="_blank" rel="noopener">reply on GitHub ↗</a>
-    <br><span class="tag">reader comment</span></div></div>`;
+    <div class="rc-head"><span class="who">${esc(n.name||"anonymous")}</span> <span class="when">${fmtDate(n.created_at)}</span></div>
+    ${moved?`<blockquote class="rc-moved" title="This passage has since changed">${esc(n.quote)}</blockquote>`:""}
+    <div class="rc-body">${bodyHTML(n.body)}</div>
+    <span class="tag">reader note${n.local?" · only in this browser":""}</span></div></div>`;
 }
-function place(comments){
+function place(notes){
   const byPage={};
-  comments.forEach(c=>(byPage[c.page]=byPage[c.page]||[]).push(c));
+  notes.forEach(n=>(byPage[n.page]=byPage[n.page]||[]).push(n));
   for(const [page, list] of Object.entries(byPage)){
     const sec=document.querySelector(`.page[data-page="${CSS.escape(page)}"]`); if(!sec) continue;
     const art=sec.querySelector("article"), margin=sec.querySelector(".margin"); if(!art||!margin) continue;
-    for(const c of list){
-      const id="rc-"+c.number;
-      if(margin.querySelector(`[data-n="${id}"]`)) continue;
-      const tm=textMap(art), loc=locate(tm,c);
+    for(const n of list){
+      const id="rn-"+n.id;
+      if(margin.querySelector(`[data-n="${CSS.escape(id)}"]`)) continue;
+      const tm=textMap(art), loc=locate(tm,{quote:n.quote, prefix:n.prefix||"", suffix:n.suffix||""});
       const marker=document.createElement("span"); marker.className="ref com reader"; marker.dataset.r=id;
-      if(loc){ const last=highlight(tm, loc.start, loc.end, id); last.after(marker); }
-      else { const nav=art.querySelector(".chapnav"); (nav?nav:art.lastChild).before(marker); } // passage changed: note goes at the end
-      margin.insertAdjacentHTML("beforeend", noteHTML(c, id, !loc));
+      if(loc){ highlight(tm, loc.start, loc.end, id).after(marker); }
+      else { const nav=art.querySelector(".chapnav"); (nav||art.lastChild).before(marker); } // passage changed: note goes at the end
+      margin.insertAdjacentHTML("beforeend", noteHTML(n, id, !loc));
     }
     // keep margin notes in the order their markers appear in the text (the layout relies on it)
-    const notes=[...margin.querySelectorAll(".note")];
-    const pos=n=>art.querySelector(`.ref[data-r="${CSS.escape(n.dataset.n)}"]`);
-    notes.sort((a,b)=>{ const ra=pos(a), rb=pos(b); if(!ra||!rb) return 0; return ra.compareDocumentPosition(rb)&Node.DOCUMENT_POSITION_FOLLOWING?-1:1; })
-      .forEach(n=>margin.appendChild(n));
-    const count=margin.querySelector(".mhead .c"); if(count) count.textContent=notes.length;
-    // a comment added while the Comments filter is off stays hidden
+    const pos=el=>art.querySelector(`.ref[data-r="${CSS.escape(el.dataset.n)}"]`);
+    const all=[...margin.querySelectorAll(".note")];
+    all.sort((a,b)=>{ const ra=pos(a), rb=pos(b); if(!ra||!rb) return 0; return ra.compareDocumentPosition(rb)&Node.DOCUMENT_POSITION_FOLLOWING?-1:1; })
+       .forEach(el=>margin.appendChild(el));
+    const count=margin.querySelector(".mhead .c"); if(count) count.textContent=all.length;
     const chip=margin.querySelector('.chip[data-kind="com"]');
-    if(chip && !chip.classList.contains("on")){ margin.querySelectorAll(".note.reader").forEach(n=>n.classList.add("hidden")); art.querySelectorAll(".ref.reader").forEach(r=>r.style.visibility="hidden"); }
+    if(chip && !chip.classList.contains("on")){ margin.querySelectorAll(".note.reader").forEach(el=>el.classList.add("hidden")); art.querySelectorAll(".ref.reader").forEach(r=>r.style.visibility="hidden"); }
   }
 }
 
-/* ---------- the Comment button for a selected passage ---------- */
-let btn;
+/* ---------- Supabase (plain REST: no library needed) ---------- */
+function api(path, opts={}){
+  return fetch(`${CFG.supabaseUrl.replace(/\/$/,"")}/rest/v1/${path}`, {...opts,
+    headers:{apikey:CFG.supabaseKey, Authorization:`Bearer ${CFG.supabaseKey}`, "Content-Type":"application/json", ...(opts.headers||{})}});
+}
+async function load(){
+  let notes=[];
+  if(remote()){
+    try{ const r=await api("notes?select=id,created_at,page,quote,prefix,suffix,name,body&status=eq.approved&order=created_at.asc");
+      if(r.ok) notes=await r.json(); else console.warn("reader notes: Supabase said", r.status, await r.text()); }
+    catch(e){ console.warn("reader notes: could not reach Supabase", e); }
+  }
+  return remote() ? notes : store.get(LOCAL_KEY,[]); // not connected yet: this browser's own notes
+}
+async function save(note){
+  if(!remote()){ note.id="local-"+Date.now(); note.local=true; const all=store.get(LOCAL_KEY,[]); all.push(note); store.set(LOCAL_KEY,all); return note; }
+  const r=await api("notes",{method:"POST", headers:{Prefer:"return=minimal"}, body:JSON.stringify({page:note.page, quote:note.quote, prefix:note.prefix, suffix:note.suffix, name:note.name, body:note.body})});
+  if(!r.ok) throw new Error((await r.text())||("error "+r.status));
+  note.id="new-"+Date.now(); return note;
+}
+
+/* ---------- a light filter, as on Invisible Cities ---------- */
+const BLOCK=["fuck","shit","bitch","cunt","asshole","nigger","nigga","faggot","retard","whore","slut","kike","spic","chink"];
+const blocked=t=>{ const s=t.toLowerCase(); return BLOCK.some(w=>new RegExp(`\\b${w}`).test(s)) || (s.match(/https?:\/\//g)||[]).length>2; };
+
+/* ---------- selecting a passage, and the note form ---------- */
+let btn, form;
 function selectionInfo(){
   const sel=window.getSelection(); if(!sel || sel.isCollapsed || !sel.rangeCount) return null;
   const r=sel.getRangeAt(0);
-  const art=(r.commonAncestorContainer.nodeType===1?r.commonAncestorContainer:r.commonAncestorContainer.parentElement).closest(".page.on article");
-  if(!art || !art.closest(".pagegrid")) return null; // chapters only
-  const quote=norm(sel.toString()); if(quote.length<2) return null;
+  const el=r.commonAncestorContainer.nodeType===1?r.commonAncestorContainer:r.commonAncestorContainer.parentElement;
+  const art=el.closest(".page.on article"); if(!art || !art.closest(".pagegrid")) return null; // chapters only
+  const quote=norm(sel.toString()).slice(0,400); if(quote.length<2) return null;
   const tm=textMap(art);
-  // where does the selection start in the mapped text?
   let start=-1;
-  for(let i=0;i<tm.map.length;i++){ const m=tm.map[i]; if(m.node===r.startContainer && m.offset>=r.startOffset){ start=i; break; }
-    if(r.startContainer.nodeType===1 && r.intersectsNode(m.node)){ start=i; break; } }
-  if(start<0 || tm.text.slice(start, start+quote.length)!==quote) start=tm.text.indexOf(quote);
-  const q=quote.slice(0,400);
-  return { page:art.closest(".page").dataset.page, quote:q,
-    prefix: start>0?tm.text.slice(Math.max(0,start-40), start):"", suffix: start>=0?tm.text.slice(start+q.length, start+q.length+40):"",
+  for(let i=0;i<tm.map.length;i++){ const m=tm.map[i]; if(m.node===r.startContainer && m.offset>=r.startOffset){ start=i; break; } }
+  if(start<0 || tm.text.slice(start,start+quote.length)!==quote) start=tm.text.indexOf(quote);
+  return { page:art.closest(".page").dataset.page, quote,
+    prefix:start>0?tm.text.slice(Math.max(0,start-40),start):"", suffix:start>=0?tm.text.slice(start+quote.length,start+quote.length+40):"",
     rect:r.getBoundingClientRect() };
 }
 function showButton(){
+  if(form && !form.hidden) return;
   const info=selectionInfo();
   if(!info){ btn.hidden=true; return; }
   btn.hidden=false; btn._info=info;
   const x=Math.min(info.rect.right+window.scrollX+6, window.scrollX+document.documentElement.clientWidth-btn.offsetWidth-10);
   btn.style.left=Math.max(8,x)+"px"; btn.style.top=(info.rect.top+window.scrollY-btn.offsetHeight-6)+"px";
 }
-function openGitHub(info){
-  const title=document.querySelector(`.page[data-page="${CSS.escape(info.page)}"] h1.title`)?.textContent?.trim()||info.page;
-  const marker=JSON.stringify({page:info.page, quote:info.quote, prefix:info.prefix, suffix:info.suffix}).replace(/--/g,"-\\u002d"); // "--" would end the HTML comment; \u002d decodes back to "-"
-  const body=`> ${info.quote.replace(/\n/g,"\n> ")}\n\n\n\n<!-- agreement-machinery: ${marker} -->`;
-  const short=info.quote.length>60?info.quote.slice(0,57)+"…":info.quote;
-  const params=new URLSearchParams({category:CFG.category||"general", title:`${title}: “${short}”`, body});
-  window.open(`https://github.com/${CFG.repo}/discussions/new?${params}`, "_blank", "noopener");
-  toast("GitHub opened in a new tab: sign in, write your comment under the quoted passage, and press Start discussion. It appears here in a minute or two.");
+function openForm(info){
+  btn.hidden=true; form._info=info; form.hidden=false;
+  form.querySelector(".rf-quote").textContent=info.quote.length>140?info.quote.slice(0,137)+"…":info.quote;
+  form.querySelector(".rf-name").value=store.get(NAME_KEY,"");
+  form.querySelector(".rf-body").value="";
+  form.querySelector(".rf-msg").textContent=remote()?"":"Comments aren't connected yet, so this note will be saved in your browser only.";
+  const w=Math.min(380, document.documentElement.clientWidth-24);
+  const left=Math.min(Math.max(12, info.rect.left+window.scrollX), window.scrollX+document.documentElement.clientWidth-w-12);
+  form.style.width=w+"px"; form.style.left=left+"px"; form.style.top=(info.rect.bottom+window.scrollY+10)+"px";
+  form.querySelector(".rf-body").focus({preventScroll:true});
 }
-function toast(msg){
+async function submit(){
+  const info=form._info, msg=form.querySelector(".rf-msg"), post=form.querySelector(".rf-post");
+  const name=form.querySelector(".rf-name").value.trim().slice(0,60), body=form.querySelector(".rf-body").value.trim().slice(0,2000);
+  if(!body){ msg.textContent="Write a note first."; return; }
+  if(blocked(body+" "+name)){ msg.textContent="That note can't be posted here."; return; }
+  store.set(NAME_KEY, name);
+  post.disabled=true; msg.textContent="Posting…";
+  try{
+    const note=await save({page:info.page, quote:info.quote, prefix:info.prefix, suffix:info.suffix, name, body, created_at:new Date().toISOString()});
+    form.hidden=true; window.getSelection().removeAllRanges();
+    place([note]); RELAYOUT();
+    toast(remote()?"Your note is posted.":"Saved in this browser only, since comments aren't connected yet.");
+  } catch(e){ msg.textContent="Couldn't post your note. Please try again in a moment."; console.warn(e); }
+  finally{ post.disabled=false; }
+}
+function toast(text){
   let t=document.querySelector(".rc-toast"); if(!t){ t=document.createElement("div"); t.className="rc-toast"; document.body.appendChild(t); }
-  t.textContent=msg; t.classList.add("on"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("on"),7000);
+  t.textContent=text; t.classList.add("on"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("on"),5000);
 }
 
 async function init(cfg, relayout){
-  CFG=cfg; if(!CFG || !CFG.repo) return;
+  CFG=cfg||{}; RELAYOUT=relayout||RELAYOUT;
   btn=document.createElement("button"); btn.className="rc-btn"; btn.hidden=true; btn.type="button";
   btn.innerHTML=`<span>◆</span> Comment`;
   btn.addEventListener("mousedown",e=>e.preventDefault()); // keep the selection
-  btn.addEventListener("click",()=>{ if(btn._info) openGitHub(btn._info); btn.hidden=true; });
-  document.body.appendChild(btn);
+  btn.addEventListener("click",()=>{ if(btn._info) openForm(btn._info); });
+  form=document.createElement("div"); form.className="rc-form"; form.hidden=true;
+  form.innerHTML=`<div class="rf-quote"></div>
+    <input class="rf-name" maxlength="60" placeholder="your name (optional)" autocomplete="name">
+    <textarea class="rf-body" maxlength="2000" rows="4" placeholder="your note"></textarea>
+    <div class="rf-bar"><span class="rf-msg"></span><button type="button" class="rf-cancel">cancel</button><button type="button" class="rf-post">post note</button></div>`;
+  form.querySelector(".rf-cancel").onclick=()=>{ form.hidden=true; };
+  form.querySelector(".rf-post").onclick=submit;
+  form.querySelector(".rf-body").addEventListener("keydown",e=>{ if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)) submit(); if(e.key==="Escape") form.hidden=true; });
+  document.body.append(btn, form);
   let t; document.addEventListener("selectionchange",()=>{ clearTimeout(t); t=setTimeout(showButton,180); });
   window.addEventListener("scroll",()=>{ if(!btn.hidden) showButton(); },{passive:true});
-  try{
-    const r=await fetch("comments.json",{cache:"no-cache"});
-    if(!r.ok) return; // previewing locally, or no comments yet
-    const list=await r.json();
-    if(Array.isArray(list) && list.length){ place(list); relayout(); }
-  } catch(_){ /* no comments file: nothing to show */ }
+  const notes=await load();
+  if(notes.length){ place(notes); RELAYOUT(); }
 }
-window.Readers={ init, _place:place };
+window.Readers={ init };
 })();

@@ -1,28 +1,70 @@
 %% title: Labelling Algorithms
 %% category: definitions
 
-A \textbf{labelling algorithm} is a function that takes in a tree whose left nodes are decorated with inherent features, and outputs a tree whose right nodes are decorated with features too, and whose left nodes may have different features from the ones they started out with.
+Merge builds a tree, but it doesn't say what features the nodes in that tree end up with. That is the job of a \textbf{labelling algorithm}. It takes in a tree where only the left nodes have features (their inherent ones), and gives back a tree where every node has features, including the right nodes, and where some left nodes may have ended up with different features from the ones they started out with.
 
-We can represent the input tree as a list of left nodes, ordered by merge step: first the first two items in the list are merged, then the next item is merged with the result, then the next, and so on. The lowest left node is the first element. Since the lexical root doesn't impact its mother's features, that mother has the same features as the lowest left node, so the next element in the list is simply the second-lowest left node.
+\section{Trees as lists}\label{sec:trees-as-lists}
 
-The output tree can also be represented as a list of nodes ordered by merge step, but it is longer, because by this point the right nodes have been valued too.
+Since every tree here is built one Merge at a time, I represent it as a list of nodes ordered by merge step. The input list contains only left nodes, lowest first: the first two items are merged, then the next item is merged with the result, and so on. The output list contains every node, left and right, in the same order. For \textit{the dogs are eating}, with the subject still in Spec,\vP:
 
-\section{Mother and daughter functions}
+\pex \dref{lists}
+  \a input: \hfill \texttt{[ v, DP, T ]}
+  \a output: \hfill \texttt{[ \rt{eat}, v, v′, DP, vP, T, T′ ]}
+\xe
 
-Each labelling algorithm needs two sub-algorithms:
+The lexical root sits at the bottom of the output, but not in the input, because it has no features of its own. This also means that merging the lowest left node with the root doesn't change anything: the mother, \lv$'$ here, has the same features as \lv itself.
+
+\section{Two passes: up, then down}\label{sec:two-passes}
+
+Every labelling algorithm works in two passes, using two sub-algorithms:
 
 \begin{description}
-  \item[The mother function] takes in a left node and a right node, and computes their mother node.
-  \item[The daughter function] modifies the features of left nodes in the tree, after the mother function has run over it.
+  \item[The mother function] works bottom-up. It takes in a left node and a right node, and computes their mother.
+  \item[The daughter function] works top-down. Once the mother function has run over the whole tree, it modifies the features of left nodes, based on the nodes above them.
 \end{description}
 
-It might seem odd that the daughter function is necessary at all. Once the mother function has run recursively over every element, all of the nodes in the tree, left and right, have feature values.
+It might seem odd that the second pass is needed at all. After the first pass, every node in the tree, left and right, already has feature values. However, if this were the finished tree, agreement would never occur. The only nodes that are actually pronounced are the left nodes and the lexical root, and after the first pass their features are exactly the ones they started with. What agreement does is let some left nodes \textit{change} the values of other left nodes, and the mother function never changes a left node.
 
-However, if this were the finished tree, agreement would never occur. The left nodes and the lexical root are the only nodes that are actually pronounced, and their feature values would be exactly the ones they started with. What agreement does is allow some left nodes to influence the features of other left nodes: to \textit{change} their values.
+So, crucially, for one left node to change the values of another, its values have to travel up through every right node on the shortest path between them, which is what the mother function does, and then back down into the other left node, which is what the daughter function does.
 
-Crucially, in this framework, for one left node to change the values of another, it needs to recursively change the values of every right node on the shortest path between them. This is what the mother function does. The daughter function then allows right nodes to influence their daughters, which is what finally changes the values of left nodes.
+\section{An example}\label{sec:labelling-example}
 
-\section{Properties of labelling algorithms}
+To make this concrete, take a toy labelling algorithm over two tiers, person and number:
+
+\begin{description}
+  \item[Mother function:] on each tier, the mother copies its left daughter's value, unless that is unvalued, in which case it copies its right daughter's.
+  \item[Daughter function:] an unvalued left node copies its mother's values.
+\end{description}
+
+The first pass \Next[a] values the right nodes from the bottom up. \lv$'$ stays unvalued, since neither \lv nor the root has values. \vP copies the subject, its left daughter: [3, pl]. T$'$ would copy T, but T is unvalued, so it copies \vP instead, and ends up [3, pl] too. The second pass \Next[b] then runs from the top down: T is an unvalued left node, so it copies its mother T$'$, and is pronounced \textit{are}. Neither of the other left nodes changes, since DP is already valued and \lv's mother has nothing to give it.
+
+\pex \dref{labelling-passes}
+  \a \begin{forest}
+     [T\1\feat{3 · pl}, name=tbar
+       [T\feat{– · –}]
+       [\vP\feat{3 · pl}, name=vp
+         [DP\feat{3 · pl} \\ \textit{the dogs}, name=dp]
+         [\lv\1\feat{– · –}
+           [\lv\feat{– · –}]
+           [\rt{eat}]]]]
+     \draw[->, blue] (dp) to[out=north, in=west] (vp);
+     \draw[->, blue] (vp) to[out=north, in=east] (tbar);
+     \end{forest}
+  \a \begin{forest}
+     [T\1\feat{3 · pl}, name=tbar
+       [T\feat{3 · pl} \\ \textit{are}, name=t]
+       [\vP\feat{3 · pl}
+         [DP\feat{3 · pl} \\ \textit{the dogs}]
+         [\lv\1\feat{– · –}
+           [\lv\feat{– · –}]
+           [\rt{eat}]]]]
+     \draw[->, blue, dashed] (tbar) to[out=west, in=north] (t);
+     \end{forest}
+\xe
+
+On the surface this looks like T reaching down to find the subject, but nothing ever looked further than one step away: each node only saw its own daughters on the way up, and its own mother on the way down.
+
+\section{Properties of labelling algorithms}\label{sec:labelling-properties}
 
 To specify a labelling algorithm, then, one needs to specify three things:
 
