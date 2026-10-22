@@ -250,7 +250,7 @@ body.nonotes .sidetog.right{display:none}
 .llap{display:inline-block;width:0;overflow:visible;white-space:nowrap;direction:rtl}
 .phantom{visibility:hidden}
 .hsp{display:inline-block}
-.math{font-style:normal;white-space:nowrap}
+.math{font-style:normal}
 .math i{font-style:italic}
 .math .mtext{font-style:normal}
 .mathdisplay{text-align:center;margin:14px 0;font-size:18.5px}
@@ -418,3 +418,34 @@ code,.tt{font-family:var(--mono);font-size:.84em;background:#E9E1CE;border:1px s
 }
 
 .side ol.untitled{margin-bottom:6px}
+
+/* inline code may wrap at its spaces; each line keeps the chip look */
+code,.tt{white-space:normal;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+code,.tt{hyphens:none;-webkit-hyphens:none}
+
+/* ---------- reader comments (GitHub Discussions) ---------- */
+mark.rq{background:rgba(30,84,88,.07);color:inherit;border-bottom:1px dotted rgba(30,84,88,.55);padding:0}
+mark.rq.hot{background:rgba(30,84,88,.16)}
+.ref.com.reader{color:var(--accent)}
+.note.reader{border-left-color:#9DB8B4}
+.note.reader .k{color:var(--accent)}
+.rc-head,.rc-reply{font-size:13px;color:var(--muted)}
+.who{display:inline-flex;align-items:center;gap:5px;color:var(--ink);text-decoration:none;font-size:13.5px}
+.who:hover{text-decoration:underline}
+.av{width:16px;height:16px;border-radius:50%;vertical-align:middle}
+.when{font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.rc-body{margin:2px 0 4px;color:var(--ink);font-size:15px;line-height:1.45}
+.rc-body p{margin:0 0 4px}
+.rc-body code{font-size:.85em}
+.rc-body img{max-width:100%}
+.rc-reply{margin:6px 0 0 10px;padding-left:8px;border-left:1px solid var(--rule)}
+.rc-moved{margin:4px 0;padding-left:8px;border-left:2px solid var(--rule);color:var(--muted);font-style:italic;font-size:14px}
+.rc-gh{font-family:var(--mono);font-size:10.5px;color:var(--accent);text-decoration:none}
+.rc-gh:hover{text-decoration:underline}
+.rc-btn{position:absolute;z-index:70;display:flex;align-items:center;gap:6px;font:inherit;font-size:13px;letter-spacing:.06em;text-transform:uppercase;
+  background:var(--accent);color:#F4EEDF;border:0;border-radius:4px;padding:5px 10px;cursor:pointer;box-shadow:0 3px 10px rgba(30,40,40,.25)}
+.rc-btn[hidden]{display:none}
+.rc-btn span{font-size:10px}
+.rc-toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);max-width:min(560px,calc(100vw - 32px));background:var(--ink);color:#F4EEDF;
+  font-size:15px;line-height:1.45;padding:10px 16px;border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:.25s;z-index:90}
+.rc-toast.on{opacity:1;transform:translate(-50%,0)}

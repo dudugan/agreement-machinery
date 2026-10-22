@@ -2,19 +2,16 @@
 %% category: misc
 
 % \begin{abstract}
-% What this project is about, and how it is put together: agreement as a family of dependencies built from a small number of moving parts.
 % \end{abstract}
 \label{ch:intro}
 
-\section{The big picture}\label{sec:big-picture}
-
 When two people are talking, words exit the mouth of one, and enter the ears of the other. Neither can see anything happening between them, so the interaction seems \textbf{long-distance}. 
 
-Yet underlyingly, the speaker’s mouth is pushing the air particles next to it, and those air particles are pushing the air particles next to them, and those air particles are pushing the air particles next to \textit{them}, until finally some air particles push against the listener’s eardrum. What seems long-distance is actually built from many smaller \textbf{local} interactions. 
+Underlyingly, the speaker’s mouth is pushing the air particles next to it, and those air particles are pushing the air particles next to them, and those air particles are pushing the air particles next to \textit{them}, until finally some air particles push against the listener’s eardrum. What seems long-distance is actually built from many smaller \textbf{local} interactions. 
 
 \section{Agreement as a local phenomenon}
 
-In syntax, one of the most well-known long-distance phenomena is agreement. In fact, some authors propose that \textit{all} long-distance phenomena in syntax can be reduced to agreement \citep{deal2025}. In this squib, I demonstrate that some of the most prominent formulations of agreement in Minimalism – variations on Chomsky’s (2001) Probe-Goal Agree – can be reformalized as local theories, where seemingly long-distance patterns result from many smaller local interactions. 
+In syntax, one of the most well-known long-distance phenomena is agreement. In fact, some authors propose that \textit{all} long-distance phenomena in syntax can be reduced to agreement \citep{deal2025}. In this squib, I demonstrate that some of the most prominent formulations of agreement in Minimalism – variations on Chomsky’s \citeyearpar{chomsky2001} \textbf{Probe-Goal Agree} – can be reformalized as local theories, where seemingly long-distance patterns result from many smaller local interactions. 
 
 Reducing long-distance agreement to local interactions is essentially the project of \textbf{tier-based strictly local (TSL) syntax,} a framework arguing that most if not all syntactic phenomena belong to a specific sub-regular computational class (‘tier-based strictly local’). The idea behind TSL is that one divides syntactic phenomena into ‘tiers’ for each feature type, like a person tier and a case tier, and then for each tier, removes nodes of a syntax tree that are not relevant to that tier. Finally, one enforces local (rather than long-distance) constraints on these reduced trees. 
 
@@ -22,22 +19,10 @@ Reducing long-distance agreement to local interactions is essentially the projec
 
 In this squib I argue that TSL syntax gets a lot of things right, and also some things wrong. It characterizes observed syntactic phenomena more narrowly than any other computational class, yet it still undergenerates in some places, and overgenerates in others. In some cases, overgeneration must be punted to other, independently motivated parts of the grammar (the lexicon, or selectional restrictions), but in others, both overgeneration and undergeneration can be fixed by adding \textbf{derivationality} to the TSL theory. In other words, we need to view TSL not as a theory which accepts or rejects completed syntax trees, but instead as a theory that proposes specific syntactic operations which obligatorily happen at specific times. 
 
-I demonstrate that a variant of the TSL class known as ‘output-sensitive TSL’ (OTSL) can be made equivalent to a certain \textbf{labelling algorithm} for Merge, and that this labelling algorithm is the local instantiation of a certain formulation of Probe-Goal Agree. Building from an intuition present in Graf (2018), I argue that this makes Agree essentially an epiphenomenon of Merge. 
+I demonstrate that a variant of the TSL class known as ‘output-sensitive TSL’ (OTSL) can be made equivalent to a certain \textbf{labelling algorithm} for Merge, and that this labelling algorithm is the local instantiation of a certain formulation of Probe-Goal Agree. Building from an intuition present in \citet{graf2018}, I argue that this makes Agree essentially an epiphenomenon of Merge. 
 
-The mathematical properties of this labelling algorithm are crucial to what kinds of agreement patterns appear cross-linguistically. For example, a labelling algorithm which is associative predicts that the features of a non-terminal mother of [X[YZ]] always be the same as the features of a non-terminal mother of [[XY]Z], ruling out ‘rock paper scissors’ patterns discussed below. 
+The mathematical properties of this labelling algorithm are crucial to what kinds of agreement patterns appear cross-linguistically. For example, a labelling algorithm which is associative predicts that the features of a non-terminal mother of [X[YZ]] always be the same as the features of a non-terminal mother of [[XY]Z], ruling out specific agreement patterns I term `rock paper scissors' patterns below. 
 
 \section{Roadmap}
 
 The structure of this squib is as follows. First, I provide an overview of my final labelling algorithm. Then, I introduce probe-goal agreement, and demonstrate how it might be transferred to this framework. Next, I introduce tier-based strict locality, and output-sensitive tier-based strict locality, and compare and contrast these with labelling. Then, I summarize the choices one has to make when creating a labelling algorithm, which represent various choices in the probe-goal and TSL frameworks. Finally, I apply this labelling framework to progressively more difficult-to-analyze cases of agreement in the literature. In the conclusion, I leave some notes for how one might analyze long-distance phenomena other than agreement in this framework, particularly more semantic phenomena like binding and NPI licensing. 
-
-
-
-
-
-% Every agreement relation in this book is assembled from the same few parts: a \emph{probe} that carries features without values, a \emph{goal} that supplies them, and a notion of \emph{locality} that decides which goal the probe finds first \citep{chomsky2000}. The parts are simple; the interest lies in how they interact.
-
-% Chapter~\ref{ch:agree} sets out the basic configuration and the ways a probe can fail.\footnote{Failure here is not ungrammaticality: following \citet{preminger2014}, a probe that finds nothing simply stays unvalued.} Chapter~\ref{ch:lda} stretches the configuration across a clause boundary, and Chapter~\ref{ch:chains} turns from finding values to pronouncing them.
-
-% \section{How to read this site}\label{sec:reading}
-
-% Examples are numbered within each chapter. Hovering over a reference to an example, such as \gref[a]{fourhaves}, shows the example itself.\comment{Keep this paragraph in sync with the About page.} Footnotes and comments sit in the margin beside the line they belong to.

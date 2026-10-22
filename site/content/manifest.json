@@ -65,5 +65,9 @@
     "#": "number",
     "π": "person",
     "γ": "gender / noun class"
+  },
+  "comments": {
+    "repo": "dudugan/agreement-machinery",
+    "category": "general"
   }
 }

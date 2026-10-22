@@ -387,6 +387,7 @@ Code.renderAll(pages);
 $("#loading").remove();
 routeFromHash(false);
 setTimeout(relayout,80);
+Readers.init(manifest.comments, relayout); // reader comments from GitHub Discussions
 if(st.warnings.length){
   console.groupCollapsed(`LaTeX: ${st.warnings.length} warning${st.warnings.length>1?"s":""}`);
   [...new Set(st.warnings)].forEach(w=>console.warn(w));

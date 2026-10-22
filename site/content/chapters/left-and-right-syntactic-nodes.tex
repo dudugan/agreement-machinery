@@ -1,3 +1,32 @@
-%% title: Defining Left and Right Syntactic Nodes
+%% title: Left and Right Syntactic Nodes
 %% category: definitions
 
+I make a distinction between two types of nodes:
+
+\begin{multicols}{2}
+\pex \dref{left-nodes} \textbf{`Left nodes'}
+  \a Heads
+  \a Specifiers
+  \a Adjuncts
+\xe
+\columnbreak
+\pex \dref{right-nodes} \textbf{`Right nodes'}
+  \a Complements
+  \a Lexical roots
+  \a The tree root
+\xe
+\end{multicols}
+
+Left nodes can generally be thought of as terminals. Here I make the load-bearing assumption that specifiers and adjuncts cannot be seen inside of for the purposes of agreement.
+
+Right nodes can generally be thought of as non-terminals, except that the rightmost complement of the tree is included in this category, despite being a terminal. I assume that this complement is a lexical root, probably the lexical verb root.
+
+The crucial difference between left nodes and right nodes is that left nodes have inherent features, while right nodes do not, and instead intake their features from the nodes around them. It is hard to imagine how this could fail to be the case for complements and the tree root, but I do make the load-bearing assumption here that lexical roots do not have features.
+
+\section{Transparent specifiers and adjuncts}\label{sec:transparent-specifiers}
+
+If specifiers and adjuncts could be seen inside of, then the analysis would essentially stay the same, but the parallels between it and OTSL would break down slightly. This is because if OTSL were to see inside of specifiers and adjuncts, it could create trinary-branching structures, which the algorithm presented here cannot do. If the algorithm presented here was modified to produce trinary-branching structures, it would become less independently motivated by Merge.
+
+\section{Lexical roots with features}\label{sec:roots-with-features}
+
+If lexical roots did have features, then the labelling algorithm would likely need a special case for them, stipulating that at least their category feature should not project. However, this may not be so bad -- as discussed later, this special case is likely already needed for specifiers and adjuncts.

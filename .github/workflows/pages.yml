@@ -1,15 +1,21 @@
-# Publishes the site/ folder to GitHub Pages on every push to main.
+# Publishes the site/ folder to GitHub Pages on every push to main, and whenever a reader comment
+# (a GitHub Discussion) is posted, edited or deleted, so comments show up in the margin.
 name: Deploy to GitHub Pages
 
 on:
   push:
     branches: [main]
+  discussion:
+    types: [created, edited, deleted, transferred, category_changed]
+  discussion_comment:
+    types: [created, edited, deleted]
   workflow_dispatch:
 
 permissions:
   contents: read
   pages: write
   id-token: write
+  discussions: read
 
 concurrency:
   group: pages
@@ -23,6 +29,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Collect reader comments
+        run: python3 .github/scripts/fetch_comments.py site/comments.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

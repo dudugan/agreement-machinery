@@ -1,3 +1,56 @@
-%% title: Defining Labelling Algorithms
+%% title: Labelling Algorithms
 %% category: definitions
 
+A \textbf{labelling algorithm} is a function that takes in a tree whose left nodes are decorated with inherent features, and outputs a tree whose right nodes are decorated with features too, and whose left nodes may have different features from the ones they started out with.
+
+We can represent the input tree as a list of left nodes, ordered by merge step: first the first two items in the list are merged, then the next item is merged with the result, then the next, and so on. The lowest left node is the first element. Since the lexical root doesn't impact its mother's features, that mother has the same features as the lowest left node, so the next element in the list is simply the second-lowest left node.
+
+The output tree can also be represented as a list of nodes ordered by merge step, but it is longer, because by this point the right nodes have been valued too.
+
+\section{Mother and daughter functions}
+
+Each labelling algorithm needs two sub-algorithms:
+
+\begin{description}
+  \item[The mother function] takes in a left node and a right node, and computes their mother node.
+  \item[The daughter function] modifies the features of left nodes in the tree, after the mother function has run over it.
+\end{description}
+
+It might seem odd that the daughter function is necessary at all. Once the mother function has run recursively over every element, all of the nodes in the tree, left and right, have feature values.
+
+However, if this were the finished tree, agreement would never occur. The left nodes and the lexical root are the only nodes that are actually pronounced, and their feature values would be exactly the ones they started with. What agreement does is allow some left nodes to influence the features of other left nodes: to \textit{change} their values.
+
+Crucially, in this framework, for one left node to change the values of another, it needs to recursively change the values of every right node on the shortest path between them. This is what the mother function does. The daughter function then allows right nodes to influence their daughters, which is what finally changes the values of left nodes.
+
+\section{Properties of labelling algorithms}
+
+To specify a labelling algorithm, then, one needs to specify three things:
+
+\begin{enumerate}
+  \item properties of the algorithm itself,
+  \item properties of the mother function, and
+  \item properties of the daughter function.
+\end{enumerate}
+
+% ===================================================================
+% ORIGINAL DRAFT (commented out; not shown on the site)
+% ===================================================================
+% A \textbf{labelling algorithm} is a function which takes in a tree whose left nodes are decorated with inherent features, and outputs a tree whose right nodes are also decorated with features, and whose left nodes have potentially different features from those they started out with. 
+%
+% We can represent the input tree as a list of nodes, ordered by merge step. First, the first two items in the list are merged, then the next item is merged with the result, then the next, and so on. The lowest left node is the first element, and assuming that its mother's features are equivalent to its own (the lexical root not impacting this), the next element in the list is the second-lowest left node. All of the nodes in the input list are left nodes. 
+%
+% The output tree can also be represented as a list of nodes, ordered by merge step, but it will have more elements, because the right nodes are also valued at this point. 
+%
+% \section{Mother and daughter functions}
+%
+% Each labelling algorithm needs two sub-algorithms: a mother function and a daughter function. The \textbf{mother function} takes in a left node and a right node, and computes a mother node. The \textbf{daughter function} somehow modifies the features of left nodes in the tree, after the mother functions has ran over it. 
+%
+% It might seem odd why the daughter function is necessary at all. Once the mother function has run recursively on every element, all of the nodes in the tree, left and right, have feature values. 
+%
+% However, if this were the finished tree, agreement would never occur, because the feature values of the left nodes and of the lexical root are exactly the same as the feature values they started with, and these are the only nodes which are actually pronounced. What agreement does is allow some left nodes to influence the features of other left nodes - to \textit{change} their values. 
+%
+% Crucially, in this framework, for one left node to change the values of another left node, it needs to recursively change the values of every right node on the shortest path between them - this is what the mother function does. Then, the daughter function allows right nodes to influence their daughters, finally changing the values of left nodes. 
+%
+% \section{Properties of labelling algorithms}
+%
+% Thus to specify a labelling algorithm, one needs to specify properties of the algorithm itself, properties of the mother function, and properties of the daughter function. 

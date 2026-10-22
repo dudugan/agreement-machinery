@@ -352,9 +352,15 @@ class MathParser extends Parser {
       if(c==="~"){ this.i++; out+="&nbsp;"; continue; }
       if(/\s/.test(c)){ this.i++; continue; }
       if(/[a-zA-Z]/.test(c)){ this.i++; out+=`<i>${c}</i>`; continue; }
-      if(c==="-"){ this.i++; out+="−"; continue; }
-      if(c==="<"){ this.i++; out+="&lt;"; continue; }
-      if(c===">"){ this.i++; out+="&gt;"; continue; }
+      // TeX spacing: relations and binary operators get space around them, punctuation a thin space after;
+      // a sign (−q, +1, x = −2) stays tight
+      const unary=()=>!out.replace(/<[^>]*>/g,"").trim() || /([(\[{=,;<>+−]|&lt;|&gt;|\u2009)\s*$/.test(out.replace(/<\/?(?:i|span)[^>]*>$/,""));
+      if(c==="-"){ this.i++; out+=unary()?"−":" − "; continue; }
+      if(c==="+"){ this.i++; out+=unary()?"+":" + "; continue; }
+      if(c==="="){ this.i++; out+=" = "; continue; }
+      if(c===","||c===";"){ this.i++; out+=c+"\u2009"; continue; }
+      if(c==="<"){ this.i++; out+=" &lt; "; continue; }
+      if(c===">"){ this.i++; out+=" &gt; "; continue; }
       if(c==="&"){ this.i++; out+=" "; continue; }
       if(c==="*"){ this.i++; out+="∗"; continue; }
       out+=esc(c); this.i++;

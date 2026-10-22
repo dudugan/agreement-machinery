@@ -1,3 +1,24 @@
 %% title: Auxiliary Assumptions
 %% category: misc
 
+For explanatory simplicity, I assume the LCA \citep{kayne1994}, and work with constituency trees rather than dependency trees, although neither choice is load-bearing for my analysis:
+
+\ex \dref{squib-trees} The trees in this squib\\
+\begin{forest}
+[XP
+  [YP \\ \textit{spec/adj}]
+  [X\1
+    [X \\ \textit{head}]
+    [ZP \\ \textit{compl}]]]
+\end{forest}
+\xe
+
+Finally, I define a syntactic node as a quadruple \texttt{N = (values, left, right, mother)} where:
+
+\pex \dref{node-quadruple}
+  \a \texttt{values} is a dictionary of features and their values (some or all can be unvalued)\\
+     e.g. person: 3; number: pl; gender: masc
+  \a \texttt{left} is a pointer to the node's left daughter
+  \a \texttt{right} is a pointer to the node's right daughter
+  \a \texttt{mother} is a pointer to the node's mother
+\xe
