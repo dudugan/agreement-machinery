@@ -6,6 +6,12 @@
  * in the margin beside its passage, under the Comments filter. To hide a note, set its status to 'hidden'
  * in the Supabase table editor.
  *
+ * Replies: a reply is a row whose parent_id points at a top-level note; it is drawn inside that note.
+ * Deleting: when a note is posted, the browser makes a random delete key, keeps it in localStorage and
+ * sends only its SHA-256 hash. The delete_note() database function removes a note when given the key
+ * whose hash matches, so readers can delete their own notes (from the browser they posted from) and
+ * nobody else's. A note that already has replies is blanked to "deleted" instead, so the replies stay.
+ *
  * Until manifest.json has a Supabase URL and key, notes are kept in this browser only (localStorage),
  * so everything can be tried out locally.
  */
@@ -13,7 +19,9 @@
 "use strict";
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 let CFG={}, RELAYOUT=()=>{};
-const LOCAL_KEY="am-reader-notes", NAME_KEY="am-reader-name";
+const LOCAL_KEY="am-reader-notes", NAME_KEY="am-reader-name", KEYS_KEY="am-reader-delete-keys";
+let NOTES=[], MINE={};   // all loaded notes; delete_hash -> delete key for notes posted from this browser
+let THREADS=true;        // false until the database has the parent_id / delete_hash columns (SUPABASE.md)
 const remote=()=>!!(CFG.supabaseUrl && CFG.supabaseKey);
 const store={ get(k,d){ try{ return JSON.parse(localStorage.getItem(k)) ?? d; }catch(_){ return d; } }, set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(_){} } };
 
@@ -64,18 +72,44 @@ function highlight(tm, start, end, id){
 /* ---------- draw notes ---------- */
 const fmtDate=d=>new Date(d).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
 const bodyHTML=t=>esc(t).split(/\n{2,}/).map(p=>`<p>${p.replace(/\n/g,"<br>")}</p>`).join("");
-function noteHTML(n, id, moved){
-  return `<div class="note com reader" data-n="${id}"><span class="k">◆</span><div>
-    <div class="rc-head"><span class="who">${esc(n.name||"anonymous")}</span> <span class="when">${fmtDate(n.created_at)}</span></div>
-    ${moved?`<blockquote class="rc-moved" title="This passage has since changed">${esc(n.quote)}</blockquote>`:""}
-    <div class="rc-body">${bodyHTML(n.body)}</div>
-    <span class="tag">reader note${n.local?" · only in this browser":""}</span></div></div>`;
+const isMine=n=>n.local || !!(n.delete_hash && MINE[n.delete_hash]);
+function actions(n, canReply){
+  const a=[];
+  if(canReply && (THREADS||!remote())) a.push(`<button type="button" class="rc-act rc-replyto" data-id="${esc(n.id)}">reply</button>`);
+  if(isMine(n) && !n.deleted) a.push(`<button type="button" class="rc-act rc-del" data-id="${esc(n.id)}">delete</button>`);
+  return a.length?`<span class="rc-acts">${a.join("")}</span>`:"";
 }
+function itemHTML(n){
+  if(n.deleted) return `<div class="rc-head"><span class="when">${fmtDate(n.created_at)}</span></div><div class="rc-body rc-gone"><p>This note was deleted.</p></div>`;
+  return `<div class="rc-head"><span class="who">${esc(n.name||"anonymous")}</span> <span class="when">${fmtDate(n.created_at)}</span></div>
+    <div class="rc-body">${bodyHTML(n.body)}</div>`;
+}
+function noteHTML(n, id, moved, replies){
+  return `<div class="note com reader" data-n="${id}"><span class="k">◆</span><div>
+    ${moved?`<blockquote class="rc-moved" title="This passage has since changed">${esc(n.quote)}</blockquote>`:""}
+    ${itemHTML(n)}
+    ${replies.map(r=>`<div class="rc-reply" data-id="${esc(r.id)}">${itemHTML(r)}${actions(r,false)}</div>`).join("")}
+    <span class="tag">reader note${n.local?" · only in this browser":""}</span>${actions(n,true)}</div></div>`;
+}
+/* take every reader note out of the page again (so the whole set can be redrawn after a change) */
+function clear(){
+  document.querySelectorAll(".note.reader, .ref.reader").forEach(el=>el.remove());
+  const parents=new Set();
+  document.querySelectorAll("mark.rq").forEach(m=>{ parents.add(m.parentNode); m.replaceWith(...m.childNodes); });
+  parents.forEach(p=>p.normalize());
+}
+function render(){ clear(); place(NOTES); RELAYOUT(); }
 function place(notes){
+  const replies={}, top=[];
+  notes.forEach(n=>{ if(n.parent_id!=null) (replies[n.parent_id]=replies[n.parent_id]||[]).push(n); else top.push(n); });
   const byPage={};
-  notes.forEach(n=>(byPage[n.page]=byPage[n.page]||[]).push(n));
-  for(const [page, list] of Object.entries(byPage)){
-    const sec=document.querySelector(`.page[data-page="${CSS.escape(page)}"]`); if(!sec) continue;
+  top.forEach(n=>{
+    // a deleted note stays only while it has replies; replies to a note that isn't shown aren't shown either
+    if(n.deleted && !(replies[n.id]||[]).length) return;
+    (byPage[n.page]=byPage[n.page]||[]).push(n);
+  });
+  for(const sec of document.querySelectorAll(".page")){
+    const page=sec.dataset.page, list=byPage[page]||[];
     const art=sec.querySelector("article"), margin=sec.querySelector(".margin"); if(!art||!margin) continue;
     for(const n of list){
       const id="rn-"+n.id;
@@ -84,7 +118,7 @@ function place(notes){
       const marker=document.createElement("span"); marker.className="ref com reader"; marker.dataset.r=id;
       if(loc){ highlight(tm, loc.start, loc.end, id).after(marker); }
       else { const nav=art.querySelector(".chapnav"); (nav||art.lastChild).before(marker); } // passage changed: note goes at the end
-      margin.insertAdjacentHTML("beforeend", noteHTML(n, id, !loc));
+      margin.insertAdjacentHTML("beforeend", noteHTML(n, id, !loc, replies[n.id]||[]));
     }
     // keep margin notes in the order their markers appear in the text (the layout relies on it)
     const pos=el=>art.querySelector(`.ref[data-r="${CSS.escape(el.dataset.n)}"]`);
@@ -102,20 +136,57 @@ function api(path, opts={}){
   return fetch(`${CFG.supabaseUrl.replace(/\/$/,"")}/rest/v1/${path}`, {...opts,
     headers:{apikey:CFG.supabaseKey, Authorization:`Bearer ${CFG.supabaseKey}`, "Content-Type":"application/json", ...(opts.headers||{})}});
 }
+const COLS="id,created_at,page,quote,prefix,suffix,name,body";
 async function load(){
-  let notes=[];
-  if(remote()){
-    try{ const r=await api("notes?select=id,created_at,page,quote,prefix,suffix,name,body&status=eq.approved&order=created_at.asc");
-      if(r.ok) notes=await r.json(); else console.warn("reader notes: Supabase said", r.status, await r.text()); }
-    catch(e){ console.warn("reader notes: could not reach Supabase", e); }
-  }
-  return remote() ? notes : store.get(LOCAL_KEY,[]); // not connected yet: this browser's own notes
+  if(!remote()) return store.get(LOCAL_KEY,[]); // not connected yet: this browser's own notes
+  try{
+    let r=await api(`notes?select=${COLS},parent_id,delete_hash,deleted&status=eq.approved&order=created_at.asc`);
+    if(r.status===400){ // the database hasn't been upgraded for replies and deleting yet (see SUPABASE.md)
+      THREADS=false; r=await api(`notes?select=${COLS}&status=eq.approved&order=created_at.asc`);
+    }
+    if(r.ok) return await r.json();
+    console.warn("reader notes: Supabase said", r.status, await r.text());
+  } catch(e){ console.warn("reader notes: could not reach Supabase", e); }
+  return [];
+}
+/* a random delete key for a new note, and the SHA-256 hash of it that is stored with the note */
+async function newKey(){
+  if(!(window.crypto && crypto.subtle)) return null; // e.g. a page opened over plain http: no deleting
+  const key=[...crypto.getRandomValues(new Uint8Array(24))].map(b=>b.toString(16).padStart(2,"0")).join("");
+  const hash=[...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(key)))].map(b=>b.toString(16).padStart(2,"0")).join("");
+  return {key, hash};
 }
 async function save(note){
   if(!remote()){ note.id="local-"+Date.now(); note.local=true; const all=store.get(LOCAL_KEY,[]); all.push(note); store.set(LOCAL_KEY,all); return note; }
-  const r=await api("notes",{method:"POST", headers:{Prefer:"return=minimal"}, body:JSON.stringify({page:note.page, quote:note.quote, prefix:note.prefix, suffix:note.suffix, name:note.name, body:note.body})});
+  const row={page:note.page, quote:note.quote, prefix:note.prefix, suffix:note.suffix, name:note.name, body:note.body};
+  const k=THREADS?await newKey():null;
+  if(THREADS){ if(note.parent_id!=null) row.parent_id=note.parent_id; if(k) row.delete_hash=k.hash; }
+  // return the new row so its id is known; if moderation keeps it hidden, Supabase can't, so fall back
+  let r=await api("notes",{method:"POST", headers:{Prefer:"return=representation"}, body:JSON.stringify(row)});
+  if(!r.ok && r.status!==400) r=await api("notes",{method:"POST", headers:{Prefer:"return=minimal"}, body:JSON.stringify(row)});
   if(!r.ok) throw new Error((await r.text())||("error "+r.status));
-  note.id="new-"+Date.now(); return note;
+  if(k){ MINE[k.hash]=k.key; store.set(KEYS_KEY, MINE); }
+  let saved=null; try{ saved=(await r.json())[0]; }catch(_){}
+  if(!saved) return null; // posted, but waiting for approval
+  return {...note, ...saved, delete_hash:k?k.hash:""};
+}
+async function remove(n){
+  if(n.local){
+    const gone=new Set([n.id, ...(n.parent_id==null?NOTES.filter(x=>x.parent_id===n.id).map(x=>x.id):[])]);
+    store.set(LOCAL_KEY, store.get(LOCAL_KEY,[]).filter(x=>!gone.has(x.id)));
+    NOTES=NOTES.filter(x=>!gone.has(x.id)); return;
+  }
+  const r=await api("rpc/delete_note",{method:"POST", body:JSON.stringify({note_id:n.id, delete_key:MINE[n.delete_hash]})});
+  if(!r.ok) throw new Error((await r.text())||("error "+r.status));
+  const result=await r.json();
+  if(result==="blanked"){ Object.assign(n,{deleted:true, body:"", name:""}); }
+  else {
+    NOTES=NOTES.filter(x=>x!==n);
+    // removing the last reply of a deleted note removes that note too (the database does the same)
+    const p=NOTES.find(x=>x.id===n.parent_id);
+    if(p && p.deleted && !NOTES.some(x=>x.parent_id===p.id)) NOTES=NOTES.filter(x=>x!==p);
+  }
+  delete MINE[n.delete_hash]; store.set(KEYS_KEY, MINE);
 }
 
 /* ---------- a light filter, as on Invisible Cities ---------- */
@@ -148,7 +219,9 @@ function showButton(){
 }
 function openForm(info){
   btn.hidden=true; form._info=info; form.hidden=false;
-  form.querySelector(".rf-quote").textContent=info.quote.length>140?info.quote.slice(0,137)+"…":info.quote;
+  const q=info.quote.length>140?info.quote.slice(0,137)+"…":info.quote;
+  form.querySelector(".rf-quote").textContent=info.parent ? `Replying to ${info.parent.deleted?"a deleted note":(info.parent.name||"anonymous")} on “${q}”` : q;
+  form.querySelector(".rf-post").textContent=info.parent?"post reply":"post note";
   form.querySelector(".rf-name").value=store.get(NAME_KEY,"");
   form.querySelector(".rf-body").value="";
   form.querySelector(".rf-msg").textContent=remote()?"":"Comments aren't connected yet, so this note will be saved in your browser only.";
@@ -156,6 +229,10 @@ function openForm(info){
   const left=Math.min(Math.max(12, info.rect.left+window.scrollX), window.scrollX+document.documentElement.clientWidth-w-12);
   form.style.width=w+"px"; form.style.left=left+"px"; form.style.top=(info.rect.bottom+window.scrollY+10)+"px";
   form.querySelector(".rf-body").focus({preventScroll:true});
+}
+function openReply(parent, at){
+  const rect=at.getBoundingClientRect();
+  openForm({page:parent.page, quote:parent.quote, prefix:parent.prefix||"", suffix:parent.suffix||"", parent, rect});
 }
 async function submit(){
   const info=form._info, msg=form.querySelector(".rf-msg"), post=form.querySelector(".rf-post");
@@ -165,12 +242,22 @@ async function submit(){
   store.set(NAME_KEY, name);
   post.disabled=true; msg.textContent="Posting…";
   try{
-    const note=await save({page:info.page, quote:info.quote, prefix:info.prefix, suffix:info.suffix, name, body, created_at:new Date().toISOString()});
+    const note=await save({page:info.page, quote:info.quote, prefix:info.prefix, suffix:info.suffix, name, body,
+      parent_id:info.parent?info.parent.id:null, created_at:new Date().toISOString()});
     form.hidden=true; window.getSelection().removeAllRanges();
-    place([note]); RELAYOUT();
-    toast(remote()?"Your note is posted.":"Saved in this browser only, since comments aren't connected yet.");
+    if(note){ NOTES.push(note); render(); }
+    const what=info.parent?"reply":"note";
+    toast(!remote()?"Saved in this browser only, since comments aren't connected yet."
+      : note?`Your ${what} is posted.` : `Thanks! Your ${what} will appear once it's approved.`);
   } catch(e){ msg.textContent="Couldn't post your note. Please try again in a moment."; console.warn(e); }
   finally{ post.disabled=false; }
+}
+async function del(n, el){
+  const replies=n.parent_id==null && NOTES.some(x=>x.parent_id===n.id);
+  if(!confirm(n.parent_id!=null?"Delete your reply?":replies?"Delete your note? The replies to it will stay.":"Delete your note?")) return;
+  el.disabled=true;
+  try{ await remove(n); render(); toast("Deleted."); }
+  catch(e){ el.disabled=false; toast("Couldn't delete that. Please try again in a moment."); console.warn(e); }
 }
 function toast(text){
   let t=document.querySelector(".rc-toast"); if(!t){ t=document.createElement("div"); t.className="rc-toast"; document.body.appendChild(t); }
@@ -194,8 +281,15 @@ async function init(cfg, relayout){
   document.body.append(btn, form);
   let t; document.addEventListener("selectionchange",()=>{ clearTimeout(t); t=setTimeout(showButton,180); });
   window.addEventListener("scroll",()=>{ if(!btn.hidden) showButton(); },{passive:true});
-  const notes=await load();
-  if(notes.length){ place(notes); RELAYOUT(); }
+  MINE=store.get(KEYS_KEY,{});
+  document.addEventListener("click",e=>{
+    const b=e.target.closest(".note.reader .rc-act"); if(!b) return;
+    e.stopPropagation();
+    const n=NOTES.find(x=>String(x.id)===b.dataset.id); if(!n) return;
+    if(b.classList.contains("rc-del")) del(n, b); else openReply(n, b);
+  });
+  NOTES=await load();
+  if(NOTES.length){ place(NOTES); RELAYOUT(); }
 }
 window.Readers={ init };
 })();
