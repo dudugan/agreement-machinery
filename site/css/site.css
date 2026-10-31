@@ -423,7 +423,7 @@ code,.tt{font-family:var(--mono);font-size:.84em;background:#E9E1CE;border:1px s
 code,.tt{white-space:normal;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 code,.tt{hyphens:none;-webkit-hyphens:none}
 
-/* ---------- reader comments (GitHub Discussions) ---------- */
+/* ---------- reader notes (Supabase) ---------- */
 mark.rq{background:rgba(30,84,88,.07);color:inherit;border-bottom:1px dotted rgba(30,84,88,.55);padding:0}
 mark.rq.hot{background:rgba(30,84,88,.16)}
 .ref.com.reader{color:var(--accent)}
@@ -464,3 +464,15 @@ mark.rq.hot{background:rgba(30,84,88,.16)}
 .rf-post{background:var(--accent);color:#F4EEDF;border:1px solid var(--accent)}
 .rf-post:disabled{opacity:.5;cursor:default}
 .note.reader .who{font-size:13.5px;color:var(--ink)}
+
+/* reader note replies and actions */
+.note.reader .rc-reply{margin:8px 0 0 2px;padding-left:9px;border-left:1px solid var(--rule)}
+.note.reader .rc-reply .rc-body{font-size:14.5px}
+.rc-gone{color:var(--faint);font-style:italic}
+.rc-acts{display:inline-flex;gap:2px;margin-left:6px;vertical-align:baseline}
+.rc-reply > .rc-acts{margin-left:-6px}
+.rc-act{font-family:var(--mono);font-size:10.5px;background:none;border:0;padding:0 6px;color:var(--accent);cursor:pointer;letter-spacing:.04em}
+.rc-act:hover{text-decoration:underline}
+.rc-act.rc-del{color:var(--muted)}
+.rc-act:disabled{opacity:.5;cursor:default}
+.pop .rc-acts{display:none}
