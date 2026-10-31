@@ -550,6 +550,8 @@ const BUILTIN={
   autoref: p=>refPH({k:p.readArg().trim(), form:"auto"}), cref: p=>refPH({k:p.readArg().trim(), form:"auto"}),
   Cref: p=>refPH({k:p.readArg().trim(), form:"Auto"}), nameref: p=>refPH({k:p.readArg().trim(), form:"name"}),
   getref: p=>refPH({k:p.readArg().trim(), form:"num"}),
+  // \hyperref[label]{text}: link any text to a label (a section, example or chapter)
+  hyperref: p=>{ const k=(p.readOpt()||"").trim(); const t=convert(p.readArg(),p.st,p.ctx,"inline"); return k?refPH({k, form:"text", text:t}):t; },
   getfullref: p=>refPH({k:p.readArg().trim(), form:"num"}),
   // expex relative references: \nextx (next example), \lastx, \anextx (two ahead), \blastx, \bblastx
   nextx: p=>relEx(p,1), anextx: p=>relEx(p,2), lastx: p=>relEx(p,0), blastx: p=>relEx(p,-1), bblastx: p=>relEx(p,-2),
@@ -1017,6 +1019,7 @@ function resolve(st, bib, docTitle){
         const r=JSON.parse(json); const f=fmtRef(r,d.id);
         if(f.bad) return (lp||"")+f.html+(sfx||"")+(rp||"");
         if(r.form==="name") return `<a ${f.attrs}>${f.name||f.num}</a>`;
+        if(r.form==="text") return `${lp||""}<a ${f.attrs}>${r.text}</a>${sfx||""}${rp||""}`;
         if(lp && rp) return `<a ${f.attrs}>(${f.num}${sfx})${f.xdoc}</a>`;
         return `${lp||""}<a ${f.attrs}>${f.num}${sfx}${f.xdoc}</a>${rp||""}`;
       })

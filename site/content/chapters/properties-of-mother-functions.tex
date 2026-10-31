@@ -1,0 +1,13 @@
+%% title: Basic Properties of Mother Functions
+%% category: properties
+
+Mother functions take in a left node and a right node, and output a mother node. Two basic properties of mother functions are farsight and commutativity:
+
+1. \textbf{Farsighted}. The mother function can refer to the feature values of nodes dominated by the two nodes it is computing the mother of, by reaching through their left/right pointers. 
+2. \textbf{Commutative}. The mother function cannot see which inputted node is the left node, and which is the right one. 
+
+Note also that commutativity is a gradient property with two endpoints: mother functions can be fully commutative, fully \textbf{anticommutative} (meaning either the left or right daughter always wins), or somewhere in between. 
+
+I will argue strongly that the mother function is likely not farsighted nor commutative. Thus, it can actually be thought of as a function which takes an ordered pair (left, right), where left and right refer to value dictionaries, and returns a new value dictionary. I also suspect that the mother function is not anticommutative. 
+
+
