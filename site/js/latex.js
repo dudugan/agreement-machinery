@@ -1081,7 +1081,7 @@ function parseBib(src, st){
     const short = names.length===0?T(fields.key||key): names.length===1?ln(names[0]): names.length===2?`${ln(names[0])} &amp; ${ln(names[1])}`:`${ln(names[0])} et al.`;
     const full = list => list.map((x,j)=> j===0 ? `${ln(x)}${x.first?", "+T(x.first):""}` : `${x.first?T(x.first)+" ":""}${ln(x)}`).join(list.length===2?" &amp; ":", ").replace(/, ([^,]*)$/, list.length>2?", &amp; $1":", $1");
     const year=T(fields.year||"n.d.");
-    let html=`${full(names)}${!authors.length&&editors.length?" (ed"+(editors.length>1?"s":"")+".)":""}. ${year}. `;
+    let html=`${full(names)}${!authors.length&&editors.length?" (ed"+(editors.length>1?"s":"")+".)":""}`.replace(/\.$/,"")+`. ${year}. `; // "Kayne, Richard S." → no double stop
     const title=T(fields.title);
     const pages=fields.pages?T(fields.pages).replace(/-+/,"–"):"";
     switch(type){

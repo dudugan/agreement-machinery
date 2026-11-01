@@ -380,14 +380,75 @@ document.addEventListener("mouseover",e=>{
 });
 document.addEventListener("mouseout",e=>{ if(e.target.closest(".xref,.cite")){ clearTimeout(popT); hidePop(); } });
 
+/* "Read as PDF": the PDF made when the site is published; in a local preview there isn't one yet,
+   so open the printable book view instead */
+$("#pdfbtn").addEventListener("click",async e=>{
+  e.preventDefault();
+  const w=window.open("","_blank");
+  let ok=false; try{ ok=(await fetch("agreement-machinery.pdf",{method:"HEAD",cache:"no-cache"})).ok; }catch(_){}
+  w.location=ok?"agreement-machinery.pdf":"./?print";
+});
+
+/* ---------- the book: every drafted chapter in reading order, for printing to PDF ----------
+ * Opened as index.html?print. When the site is published, GitHub prints this view with Chrome into
+ * agreement-machinery.pdf, which the "Read as PDF" button opens. Footnotes become numbered notes at the
+ * end of each chapter; margin comments and reader notes are left out; links point inside the book. */
+function buildBook(){
+  document.body.classList.add("book");
+  const book=document.createElement("div"); book.id="book";
+  const live=chapters.filter(c=>!META[c.id].stub);
+  let toc="", rn=0;
+  manifest.parts.forEach((p,pi)=>{
+    if(p.title) rn++;
+    const chs=live.filter(c=>c.part===pi); if(!chs.length) return;
+    toc+=`${p.title?`<h3><span class="rn">${ROMAN[rn]}</span>${p.title}</h3>`:""}<ol>${chs.map(c=>`<li><a href="#ch-${c.id}"><span class="n">${c.n}</span>${META[c.id].title}</a></li>`).join("")}</ol>`;
+  });
+  const date=new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
+  book.innerHTML=`<div class="bk-bar"><a href="./">← back to the site</a><span>This is the printable version of every drafted chapter.</span><button type="button" onclick="window.print()">Print or save as PDF</button></div>
+    <section class="bk-title"><p class="kicker">An Independent Study and Thesis Project</p><h1>Agreement Machinery</h1>
+      <p class="bk-date">${date}</p><p class="bk-url">dudugan.github.io/agreement-machinery</p></section>
+    <nav class="bk-toc"><h2>Contents</h2>${toc}<ol><li><a href="#bk-bib"><span class="n"></span>Bibliography</a></li></ol></nav>`;
+  for(const c of live){
+    const sec=document.querySelector(`.page[data-page="${c.id}"]`); if(!sec) continue;
+    const art=sec.querySelector("article"), d=META[c.id].doc;
+    const ch=document.createElement("section"); ch.className="bk-chapter"; ch.id="ch-"+c.id;
+    art.querySelector(".chapnav")?.remove(); art.querySelector(".meta")?.remove();
+    art.querySelectorAll(".ref.com").forEach(r=>r.remove());
+    art.querySelectorAll(".ref:not(.com)").forEach(r=>{ const a=document.createElement("a"); a.className="ref"; a.href="#"+r.dataset.r; a.textContent=r.textContent; r.replaceWith(a); });
+    ch.appendChild(art);
+    const fns=d.notes.filter(n=>n.kind==="fn");
+    if(fns.length) ch.insertAdjacentHTML("beforeend",`<div class="bk-notes"><h4>Notes</h4><ol>${fns.map(n=>`<li id="${n.id}" value="${n.n}">${n.html}</li>`).join("")}</ol></div>`);
+    book.appendChild(ch);
+  }
+  const bib=document.createElement("section"); bib.className="bk-chapter"; bib.id="bk-bib";
+  bib.innerHTML=`<article><h1 class="title">Bibliography</h1><ul class="bib">${$("#bib-list").innerHTML}</ul></article>`;
+  bib.querySelectorAll(".by").forEach(x=>x.remove());
+  book.appendChild(bib);
+  // links point inside the book (and so work inside the PDF)
+  book.querySelectorAll("a[data-ex]").forEach(a=>a.href="#"+a.dataset.ex);
+  book.querySelectorAll("a[data-bib]").forEach(a=>a.href="#bib-"+a.dataset.bib);
+  book.querySelectorAll("a[data-go]").forEach(a=>{ const g=a.dataset.go, to=a.dataset.to;
+    if(META[g] && !META[g].stub) a.href=to?"#"+to:"#ch-"+g; else a.removeAttribute("href"); });
+  book.querySelectorAll("[data-go],[data-ex],[data-bib]").forEach(a=>{ delete a.dataset.go; delete a.dataset.to; delete a.dataset.ex; delete a.dataset.bib; });
+  book.querySelectorAll(".codeblock .code-actions, .nodeform").forEach(x=>x.remove());
+  document.body.appendChild(book);
+  Diagrams.fitDiagrams(book);
+  book.querySelectorAll(".ex[data-conns]").forEach(Diagrams.drawConns);
+  document.title="Agreement Machinery";
+  document.body.dataset.ready="1";
+}
+
 /* ---------- draw diagrams, then show the page ---------- */
 await document.fonts.ready;
 Diagrams.renderAll(st.diagrams, pages, m=>st.warnings.push(m));
 Code.renderAll(pages);
 $("#loading").remove();
-routeFromHash(false);
-setTimeout(relayout,80);
-Readers.init(manifest.comments, relayout); // reader notes, replies and deleting, via Supabase
+if(new URLSearchParams(location.search).has("print")) buildBook(); // the "Read as PDF" view
+else {
+  routeFromHash(false);
+  setTimeout(relayout,80);
+  Readers.init(manifest.comments, relayout); // reader notes, replies and deleting, via Supabase
+}
 if(st.warnings.length){
   console.groupCollapsed(`LaTeX: ${st.warnings.length} warning${st.warnings.length>1?"s":""}`);
   [...new Set(st.warnings)].forEach(w=>console.warn(w));

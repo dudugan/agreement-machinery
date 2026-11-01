@@ -1,4 +1,4 @@
-# Publishes the site/ folder to GitHub Pages on every push to main.
+# Publishes the site/ folder to GitHub Pages on every push to main, with a PDF of the book.
 name: Deploy to GitHub Pages
 
 on:
@@ -23,6 +23,15 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Print the book to PDF (the "Read as PDF" button)
+        continue-on-error: true   # if this ever fails, the site still publishes, just without a fresh PDF
+        run: |
+          python3 -m http.server 8123 --directory site >/dev/null 2>&1 &
+          sleep 2
+          google-chrome --headless=new --no-sandbox --disable-gpu --no-pdf-header-footer \
+            --run-all-compositor-stages-before-draw --virtual-time-budget=30000 \
+            --print-to-pdf=site/agreement-machinery.pdf "http://localhost:8123/?print"
+          ls -l site/agreement-machinery.pdf
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
