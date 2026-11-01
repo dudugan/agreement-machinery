@@ -25,22 +25,31 @@ jobs:
       - uses: actions/checkout@v4
       # The "Read as PDF" button: the chapters compiled with LaTeX (thesis/build.py).
       # If any of this fails, the site still publishes; the button then shows the printable web version.
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         id: tex
         with:
           path: ~/.TinyTeX
-          key: tinytex-${{ hashFiles('thesis/texlive-packages.txt') }}
+          key: tinytex-v2-${{ hashFiles('thesis/texlive-packages.txt') }}
       - name: Install LaTeX (TinyTeX)
         if: steps.tex.outputs.cache-hit != 'true'
         continue-on-error: true
         run: |
           curl -sL "https://yihui.org/tinytex/install-bin-unix.sh" | sh
-          ~/.TinyTeX/bin/*/tlmgr install $(cat thesis/texlive-packages.txt)
+          TLMGR=$(echo ~/.TinyTeX/bin/*/tlmgr)
+          $TLMGR update --self          # a fresh TinyTeX won't install packages until tlmgr is current
+          $TLMGR install $(cat thesis/texlive-packages.txt)
       - name: Build the PDF
+        id: pdf
         continue-on-error: true
         run: |
           export PATH="$(echo ~/.TinyTeX/bin/*):$PATH"
           python3 thesis/build.py
+      - name: Keep LaTeX for next time (only once a PDF has been built with it)
+        if: steps.tex.outputs.cache-hit != 'true' && steps.pdf.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.TinyTeX
+          key: tinytex-v2-${{ hashFiles('thesis/texlive-packages.txt') }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
