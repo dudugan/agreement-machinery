@@ -393,7 +393,10 @@ $("#pdfbtn").addEventListener("click",async e=>{
  * Opened as index.html?print. When the site is published, GitHub prints this view with Chrome into
  * agreement-machinery.pdf, which the "Read as PDF" button opens. Footnotes become numbered notes at the
  * end of each chapter; margin comments and reader notes are left out; links point inside the book. */
-function buildBook(){
+async function buildBook(){
+  // fetch every face the book uses before it is printed, or the PDF falls back to a stand-in serif
+  await Promise.all(['17px "EB Garamond"','italic 17px "EB Garamond"','500 17px "EB Garamond"','600 17px "EB Garamond"',
+    'italic 500 17px "EB Garamond"','12px "IBM Plex Mono"'].map(f=>document.fonts.load(f,"Aaœπ√–").catch(()=>{})));
   document.body.classList.add("book");
   const book=document.createElement("div"); book.id="book";
   const live=chapters.filter(c=>!META[c.id].stub);
@@ -435,6 +438,7 @@ function buildBook(){
   Diagrams.fitDiagrams(book);
   book.querySelectorAll(".ex[data-conns]").forEach(Diagrams.drawConns);
   document.title="Agreement Machinery";
+  await document.fonts.ready;
   document.body.dataset.ready="1";
 }
 

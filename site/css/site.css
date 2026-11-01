@@ -1,3 +1,11 @@
+/* fonts are hosted with the site (SIL Open Font License), so they also embed in the printed PDF */
+@font-face{font-family:"EB Garamond";font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/EBGaramond-Regular.ttf) format("truetype")}
+@font-face{font-family:"EB Garamond";font-style:normal;font-weight:500;font-display:swap;src:url(../fonts/EBGaramond-Medium.ttf) format("truetype")}
+@font-face{font-family:"EB Garamond";font-style:normal;font-weight:600 700;font-display:swap;src:url(../fonts/EBGaramond-SemiBold.ttf) format("truetype")}
+@font-face{font-family:"EB Garamond";font-style:italic;font-weight:400;font-display:swap;src:url(../fonts/EBGaramond-Italic.ttf) format("truetype")}
+@font-face{font-family:"EB Garamond";font-style:italic;font-weight:500 700;font-display:swap;src:url(../fonts/EBGaramond-MediumItalic.ttf) format("truetype")}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/IBMPlexMono-Regular.ttf) format("truetype")}
+
 :root{
   --bg:#F1EBDD; --paper:#FAF6EC; --ink:#2B2620; --muted:#8A7F6E; --faint:#B4A88F;
   --rule:#D8CCB4; --hl:#E7DDC6; --accent:#1E5458; --tan:#CDBB9B; --link:#5A4632;
