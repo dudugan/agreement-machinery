@@ -1,4 +1,4 @@
-# Publishes the site/ folder to GitHub Pages on every push to main, with a PDF of the book.
+# Publishes the site/ folder to GitHub Pages on every push to main, with the chapters compiled to a PDF.
 name: Deploy to GitHub Pages
 
 on:
@@ -23,15 +23,24 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Print the book to PDF (the "Read as PDF" button)
-        continue-on-error: true   # if this ever fails, the site still publishes, just without a fresh PDF
+      # The "Read as PDF" button: the chapters compiled with LaTeX (thesis/build.py).
+      # If any of this fails, the site still publishes; the button then shows the printable web version.
+      - uses: actions/cache@v4
+        id: tex
+        with:
+          path: ~/.TinyTeX
+          key: tinytex-${{ hashFiles('thesis/texlive-packages.txt') }}
+      - name: Install LaTeX (TinyTeX)
+        if: steps.tex.outputs.cache-hit != 'true'
+        continue-on-error: true
         run: |
-          python3 -m http.server 8123 --directory site >/dev/null 2>&1 &
-          sleep 2
-          google-chrome --headless=new --no-sandbox --disable-gpu --no-pdf-header-footer \
-            --run-all-compositor-stages-before-draw --virtual-time-budget=30000 \
-            --print-to-pdf=site/agreement-machinery.pdf "http://localhost:8123/?print"
-          ls -l site/agreement-machinery.pdf
+          curl -sL "https://yihui.org/tinytex/install-bin-unix.sh" | sh
+          ~/.TinyTeX/bin/*/tlmgr install $(cat thesis/texlive-packages.txt)
+      - name: Build the PDF
+        continue-on-error: true
+        run: |
+          export PATH="$(echo ~/.TinyTeX/bin/*):$PATH"
+          python3 thesis/build.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

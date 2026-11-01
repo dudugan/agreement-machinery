@@ -1,0 +1,73 @@
+%% preamble.tex: packages and definitions for the PDF edition (compiled with XeLaTeX).
+%% The chapters themselves are the same .tex files the website reads; site-only commands
+%% (\textfeat, \comment, nodestream forms, minted code) get plain LaTeX meanings here, and
+%% \headchain is turned into TikZ by build.py before compiling.
+
+\usepackage{fontspec}                 % Latin Modern: the Computer Modern look, with Unicode input
+\usepackage{newunicodechar}
+%% IPA and other phonetic characters Latin Modern lacks (ː, ʕ, ɛ, ʃ, …) come from Charis SIL
+\newfontfamily\ipafont{CharisSIL}[Extension=.ttf, UprightFont=*-Regular, ItalicFont=*-Italic,
+  BoldFont=*-Bold, BoldItalicFont=*-BoldItalic, Scale=MatchLowercase]
+\input{ipachars}  % written by build.py: one \newunicodechar line per phonetic character the text uses
+\newunicodechar{√}{\ensuremath{\surd}}
+\newunicodechar{ˆ}{\^{}}
+\newunicodechar{∅}{\ensuremath{\emptyset}}
+\newunicodechar{′}{\ensuremath{'}}
+\newunicodechar{✗}{\ding{55}}
+\newunicodechar{✓}{\ding{51}}
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+
+\usepackage{amsmath,amssymb}
+\usepackage{xspace}
+\usepackage{pifont}
+\usepackage[normalem]{ulem}
+\usepackage{multicol}
+\usepackage{paracol}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{listings}
+
+%% examples and glosses
+\usepackage{expex}
+\lingset{belowglpreambleskip=0pt, aboveglftskip=0pt, everygla=, everyglb=, everyglft=}
+\gathertags   % lets \gref / \getref point forward and across chapters (needs two LaTeX runs)
+
+%% trees and diagrams
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,patterns,positioning,calc}
+\usepackage[linguistics]{forest}
+\forestset{default preamble={for tree={align=center, parent anchor=south, child anchor=north, font=\linespread{1}\selectfont}}}
+
+%% references
+\usepackage{csquotes}
+\usepackage[backend=biber, style=unified, natbib=true, maxcitenames=2]{biblatex}
+\usepackage[hidelinks]{hyperref}
+
+%% the website draws arrows in its teal; a printed thesis is all black
+\colorlet{blue}{black}
+\colorlet{navy}{black}
+\colorlet{teal}{black}
+
+%% no \xspace space before a prime or subscript: v\1 → v′, \vP\subs{inf}
+\AtBeginDocument{\xspaceaddexceptions{\1 \subs \supers \textsubscript \textsuperscript}}
+
+%% site-only commands
+\providecommand{\textfeat}[1]{{\footnotesize\ttfamily #1}}
+\providecommand{\comment}[1]{}          % margin comments are left out of the PDF
+\providecommand{\todo}[2][]{}
+\providecommand{\marginnote}[2][]{}
+\newenvironment{nodestream}[1][]{\par\emph{[An interactive form here on the website.]}\par\setbox0\vbox\bgroup}{\egroup}
+\lstset{basicstyle=\small\ttfamily, columns=fullflexible, keepspaces=true, breaklines=true,
+  frame=single, rulecolor=\color{black!25}, xleftmargin=1em, xrightmargin=1em,
+  commentstyle=\itshape\color{black!60}, keywordstyle=\bfseries, showstringspaces=false}
+\lstnewenvironment{minted}[1]{\singlespacing\lstset{language=#1}}{}
+
+%% a chapter's "Tl;dr" summary
+\renewenvironment{abstract}{\begin{quote}\small\itshape}{\end{quote}}
+
+%% trees, diagrams and examples are set single-spaced inside the double-spaced text
+\tikzset{every node/.append style={font=\linespread{1}\selectfont}}
+\lingset{everyex={\setstretch{1}}}
+
+%% examples are numbered (1), (2), … afresh in each chapter, as on the website
+\AddToHook{cmd/chapter/before}{\global\excnt=1\relax}
