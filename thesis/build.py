@@ -294,7 +294,7 @@ def main():
         r = subprocess.run(cmd, cwd=BUILD, capture_output=True, text=True)
         if r.returncode != 0:
             log = os.path.join(BUILD, "thesis.log")
-            tail = open(log, encoding="utf-8", errors="replace").read()[-4000:] if os.path.exists(log) else r.stdout[-4000:]
+            tail = (open(log, encoding="utf-8", errors="replace").read()[-6000:] if os.path.exists(log) else "") + "\n--- output ---\n" + (r.stdout + r.stderr)[-3000:]
             sys.exit(f"{' '.join(cmd)} failed:\n{tail}")
     xe = ["xelatex", "-interaction=nonstopmode", "-halt-on-error", "thesis.tex"]
     run(*xe)

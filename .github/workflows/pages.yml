@@ -37,13 +37,15 @@ jobs:
           curl -sL "https://yihui.org/tinytex/install-bin-unix.sh" | sh
           TLMGR=$(echo ~/.TinyTeX/bin/*/tlmgr)
           $TLMGR update --self          # a fresh TinyTeX won't install packages until tlmgr is current
-          $TLMGR install $(cat thesis/texlive-packages.txt)
+          $TLMGR install $(grep -v '^#' thesis/texlive-packages.txt)
       - name: Build the PDF
         id: pdf
         continue-on-error: true
         run: |
           export PATH="$(echo ~/.TinyTeX/bin/*):$PATH"
-          python3 thesis/build.py
+          # the build's output is published as pdf-build.txt, so a failed PDF can be diagnosed without a GitHub login
+          set -o pipefail
+          python3 thesis/build.py 2>&1 | tee site/pdf-build.txt
       - name: Keep LaTeX for next time (only once a PDF has been built with it)
         if: steps.tex.outputs.cache-hit != 'true' && steps.pdf.outcome == 'success'
         uses: actions/cache/save@v4
