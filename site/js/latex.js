@@ -407,6 +407,8 @@ class MathParser extends Parser {
       case "phantom": { const a=new MathParser(this.readArg(),st,this.ctx).parse(); return `<span class="phantom">${a}</span>`; }
       case "left": case "right": case "big": case "Big": case "bigg": case "Bigg": case "bigl": case "bigr": case "Bigl": case "Bigr": case "displaystyle": case "scriptstyle": case "limits": case "nolimits": return "";
       case "xspace": return "";
+      case "ensuremath": case "mathord": return new MathParser(this.readArg(),st,this.ctx).parse();
+      case "mathbin": case "mathrel": return ` ${new MathParser(this.readArg(),st,this.ctx).parse()} `;
     }
     if(MSYM[name]!==undefined) return esc(MSYM[name]);
     if(BUILTIN[name]) return BUILTIN[name](this, cs) ?? "";
@@ -495,6 +497,7 @@ const BUILTIN={
   underline: wrap("span","unl"), uline: wrap("span","unl"), sout: wrap("s"), textsubscript: wrap("sub"), textsuperscript: wrap("sup"),
   text: wrap("span"), mbox: wrap("span"), hbox: wrap("span"), makebox: p=>{ p.readOpt(); p.readOpt(); return wrap("span")(p); },
   textfeat: wrap("span","feat"),
+  ensuremath: p=>mathToHtml(p.readArg(),p.st,p.ctx),
   // \sc{…} as a command, or {\sc …} as a declaration
   sc: p=>{ p.skipWS(); return p.peek()==="{" ? wrap("span","sc")(p) : decl("sc")(p); },
   bf: decl("bf"), it: decl("it"), em: decl("it"), itshape: decl("it"), bfseries: decl("bf"), scshape: decl("sc"), ttfamily: decl("tt"),
