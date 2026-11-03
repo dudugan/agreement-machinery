@@ -312,7 +312,7 @@ function assemble(out, mode){
       const last=j===paras.length-1;
       if(last && after){
         if(BR_END.test(t) && t.trim()){ t=t.replace(BR_END,""); }   // "label\\" before a block: keep it on its own line
-        else if(mode==="auto" && t.trim()){                     // "a. \begingl …": label and block share a line
+        else if(mode==="auto" && t.trim() && !/^<(ol|ul|dl)\b/.test(segs[k+1].slice(1))){ // "a. \begingl …": label and block share a line (a list starts its own line, as in LaTeX)
           segs[k+1]=BS+`<div class="lnrow"><span class="lead">${t.trim()}</span>${segs[k+1].slice(1,-1)}</div>`+BE; return; }
       }
       t=t.trim();

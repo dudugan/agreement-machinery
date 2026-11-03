@@ -1,0 +1,28 @@
+%% title: Undeveloped ideas
+%% category: misc
+
+\begin{itemize}
+\item make not-having-specs-and-compls-interact be a potential property, and otherwise the algorithm takes one maximal projection at a time
+\item The potentially-Icelandic puzzle from our meeting: p-Icelandic L allows agreement with nominative objects in embedded clauses, but not doubly-embedded clauses. No way to do this with TSL-2 or OTSL-2; need phases. If it turns out OTSL can condition on things already sent to spellout, then a tier is more like writable external memory; if not, it's more like a true erasure function. (OTSL implies timing anyway.)
+\end{itemize}
+
+\section{Ordering a maximal projection}
+
+OTSL allows you to condition on the previous node. With the assumption in \Next{} below, this can be reframed as \NNext:
+
+\ex \textbf{Conservation:} the mother node value must be one of the daughter node values. \xe
+
+\ex Take the last-computed value and the input value, and choose one of them. \xe
+
+There are a few questions:
+
+\pex What order are the nodes in?
+    \a If you're looking at a constituency tree, the order is presumably bottom-up: start with the rightmost complementizer, then its head, then that head's specifiers, then that head projection's sister which is a head, and repeat. After the first bottom right node, just keep going `head specifiers head specifiers' up the tree.
+    \a This is not what a c-string (what OTSL uses) is. C-strings snake up dependency trees from complement to specifiers to head, so the order would instead be first the bottom-right node, then any specifiers of its projection, then finally the head of its projection, and etc. After the first node, just keep going `specifiers head specifiers head' up the tree.
+\xe
+
+Does this difference matter? It might matter for two reasons:
+
+\ex There might be ordering preferences such that the input sometimes wins over the last-computed output just because it is the input, or vice versa. \xe
+
+Note that this truly creates a difference in analysis between the two systems if and only if multiple specifiers are allowed. If multiple specifiers are not allowed, then `use constituency trees and last-computed wins over input' is equivalent to `use c-strings and input wins over last-computed' -- both enforce the rule `heads win'. However, both approaches order specifiers in the same way, bottom-up. Thus it is a question of whether head-specifier ordering is the same as higher-specifier-to-lower-specifier ordering, or the reverse. This seems like an empirical question.

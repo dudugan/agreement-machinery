@@ -1,6 +1,51 @@
 %% title: Tier-based strict locality
 %% category: misc
 
+% "(1a-b) or (4a-b)" below refers to examples in the document this text came from; this page has no such examples yet
+The dominant framework in theoretical linguistics since around 2000 has been \textbf{the Minimalist Program}, which seeks to, as one might expect, reduce the number of explanatory mechanisms for narrowly characterizing Ways Languages Can Be. For example, for every contrast like (1a-b) or (4a-b) we could say that a different linguistic rule is at play, but then it seems like we are not capturing real patterns that exist. Plus, it is pretty implausible that what we have in our minds corresponding to language is a long list of such rules. So the goal is instead to explain multiple phenomena with only a few rules.
+
+One very tempting rule is to say that all phenomena in language are \textbf{strictly local}. This means things can only influence other things if they're right next to each other. For example, rules like \Next[a] are common across languages, but rules like \Next[b] are unheard of:
+
+\pex \a When a word starts with `p-' and a prefix ends with `-n', make the prefix end with `-m' instead. (This is why we get \textit{i\textbf{n-t}olerable} but \textit{i\textbf{m-p}ossible}.)
+    \a When a word starts with `p-' and a suffix starts with `n-', make the suffix start with `m-' instead. (This would be like if we got \textit{\textbf{t}olerable-\textbf{n}ess} but \textit{\textbf{p}ossible-\textbf{m}ess}.)
+\xe
+
+Intuitively, the reason why \Last[a] is ok is because the two things interacting are right next to each other. Yet there are some parts of language -- notably, agreement -- that are on the surface not local. For example, I bet \Next{} sounds relatively fine to you:
+
+\ex The gelato bowl quietly seems to be thriving. \xe
+
+The verb ``seems'' agrees with its subject ``the gelato bowl'' even though they aren't right next to each other. The way we solve this is by making strict locality \textbf{tier-based}. This roughly means that we take a subset of the words in the sentence that we think are relevant to agreement -- maybe all the nouns and verbs -- and remove everything else:
+
+\ex gelato bowl seems \xe
+
+This is the `agreement tier', and the hypothesis is that everything should be strictly local \textit{on this tier}. Once we remove ``quietly'', ``gelato bowl'' and ``seems'' are together other again.
+
+Tier-based strict locality captures surprisingly many linguistic patterns, but it doesn't work alone. I'm interested in its scaffolding.
+
 Reducing long-distance agreement to local interactions is essentially the project of \textbf{tier-based strictly local (TSL) syntax,} a framework arguing that most if not all syntactic phenomena belong to a specific sub-regular computational class (‘tier-based strictly local’). The idea behind TSL is that one divides syntactic phenomena into ‘tiers’ for each feature type, like a person tier and a case tier, and then for each tier, removes nodes of a syntax tree that are not relevant to that tier. Finally, one enforces local (rather than long-distance) constraints on these reduced trees.
 
 In this squib I argue that TSL syntax gets a lot of things right, and also some things wrong. It characterizes observed syntactic phenomena more narrowly than any other computational class, yet it still undergenerates in some places, and overgenerates in others. In some cases, overgeneration must be punted to other, independently motivated parts of the grammar (the lexicon, or selectional restrictions), but in others, both overgeneration and undergeneration can be fixed by adding \textbf{derivationality} to the TSL theory. In other words, we need to view TSL not as a theory which accepts or rejects completed syntax trees, but instead as a theory that proposes specific syntactic operations which obligatorily happen at specific times.
+
+\section{Strict locality and tiers in phonology}
+
+One very tempting rule is to say that all phenomena in language are \textbf{strictly local (SL)}. This means things can only influence other things if they're right next to each other. For example, rules like \Next[a] are common across languages, but rules like \Next[b] are near-impossible:
+
+\pex \a When a word starts with `p-' and a prefix ends with `-n', make the prefix end with `-m' instead. (This is why we get \textit{i\textbf{n-t}olerable} but \textit{i\textbf{m-p}ossible}.)
+    \a When a word starts with `p-' and a suffix starts with `n-', make the suffix start with `m-' instead. (This would be like if we got \textit{\textbf{t}olerable-\textbf{n}ess} but \textit{\textbf{p}ossible-\textbf{m}ess}.)
+\xe
+
+Intuitively, the reason why \Last[a] is ok is because the two things interacting are right next to each other. To write an SL grammar capturing this constraint, we might say that the phoneme bigram `pn' is banned in English. It turns out that we can capture almost all of the constraints in phonology with only a large list of banned bigrams.
+
+Yet there are some patterns in phonology where interacting elements are not right next to each other. Canonically, consonant and vowel \textbf{harmony} allow specific sets of consonants and vowels to interact with each other even across some intervening material. This doesn't happen in English, but in Slovenian, for example, a single word cannot usually have both of the phonemes `ʃ' and `s'. Possible words could be `saksa' and `ʃakʃa', but not `ʃaksa'.
+
+We can capture this pattern by removing all of the phonemes we know not to be relevant for Slovenian consonant harmony from the word -- in the prior examples we are only left with the strings `ss', `ʃʃ', and `ʃs' respectively. Then, we search for banned bigrams in the resulting word -- we can ban `ʃs' and `sʃ', while still allowing `ss' and `ʃʃ'.
+
+This is the process of building a \textbf{tier}. Patterns that can be captured in this way are called \textbf{tier-based strictly local (TSL)} patterns. A tier-based strictly local grammar requires two lists:
+
+\pex \a A list of the elements that `project' to the tier (are not deleted).
+    \a A list of banned bigrams on the tier.
+\xe
+
+One consequence of this is that we can easily represent \textbf{blockers} of harmony patterns. For example, in Slovenian, the phoneme `t' blocks consonant harmony, meaning that the word `ʃatsa' is licit -- `ʃ' and `s' cannot influence each other across an intervening `t'.
+
+This is dealt with easily in a TSL grammar -- just project `t' to the tier. This way, the tier for `ʃatsa' will be `ʃts', which doesn't contain the banned bigram `ʃs'.

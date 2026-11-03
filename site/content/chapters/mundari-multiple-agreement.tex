@@ -1,3 +1,50 @@
 %% title: Mundari multiple agreement
 %% category: phenomena
 
+\citet{verbilhunter2026} present a case of vowel harmony which an earlier paper, Mayer and Major (2018), identified as not representable as TSL. Then, they argue that this pattern is analogous to a pattern in syntax, which is also not TSL (in contrast to many other syntactic patterns, which are). They then make reference to a slightly more powerful class called the \textbf{output-TSL (OTSL)} languages. These languages can capture both patterns.
+
+The phonological pattern Mayer and Major (2018) present is Uyghur backness harmony. Essentially, Uyghur vowels and consonants need to agree in a phonological feature called `backness' (similar to how in Slovenian, sibilants throughout a word must agree in their place of articulation, unless blocked by /t/). There are two groups of phonemes in Uyghur, front and back, presented in \Next:
+
+\pex \a Front phonemes: \{y, ø, æ, k, g\}
+    \a Back phonemes: \{u, o, a, q, ʁ\}
+\xe
+
+These phonemes don't need to agree within a root (one root could have both front and back phonemes). However, when you add a suffix to a root, the form of the suffix agrees with the root in backness, through the following algorithm:
+
+\ex \textbf{Algorithm for determining Uyghur suffix forms}
+\begin{enumerate}
+    \item If there is a harmonizing vowel in the stem, the suffix should match the backness of the final harmonizing vowel. If the underlying form of the suffix is /-da/ or /-dæ/, then the surface form will be /-dæ/ if the final harmonizing vowel in the word is front, and /-da/ if it is back.
+    \item If there's no harmonizing vowel in the stem, the suffix should match the backness of the final harmonizing consonant: /-dæ/ if in \{k, g\}, and /-da/ if in \{q, ʁ\}.
+    \item If there's no harmonizing phonemes in the stem, the suffix can surface as either.
+\end{enumerate}
+\xe
+
+It is impossible to represent this pattern as TSL. To understand why, we can attempt to build a tier to represent it.
+
+If we project all harmonizing consonants and vowels to the tier, then we correctly block cases like \textit{kami-ki}, where the final harmonizing vowel in the word is back, and the suffix contains a front phoneme (instead, it should be \textit{kami-qi}). The tier for this word would be `kak', containing the illicit bigram `ak' (we'll assume illicit bigrams are only a problem at word boundaries, so the stem internal illicit bigram `ka' is not a problem).
+
+However, this tier projection function incorrectly allows \textit{maki-ki}, and blocks the correct \textit{maki-qi}. This is because the tiers for these forms would be `akk' and `akq' respectively, with an illicit bigram appearing only in the second. Yet the first is correct, because an earlier harmonizing vowel in the word `overrides' a later harmonizing consonant.
+
+One might instead try projecting only the harmonizing vowels, but this fails to capture cases where there are only harmonizing consonants in the stem.
+
+To fix this, Mayer and Major (2018) use OTSL, which essentially allows you to project or not project phonemes onto a tier depending on the last phoneme projected onto the tier. The necessary rule is, ``project a harmonizing consonant onto the tier if and only if the last thing projected onto the tier was not a vowel''.
+
+The syntactic parallel Verbil and Hunter draw is with verbal agreement in Mundari. In this language, the verb has an `object' agreement slot that variably agrees with either the direct or indirect object. Whether it agrees with the direct or indirect object is determined by the person feature of both arguments, following the algorithm below:
+
+\ex \textbf{Algorithm for determining Mundari object agreement}
+\begin{enumerate}
+    \item If there is a first person object below the verb, the object agreement morpheme is /-iɲ/.
+    \item Otherwise, if there is a second person object below the verb, the object agreement morpheme is /-m/.
+    \item If there are no first or second person objects, the object agreement morpheme is /-i/.
+\end{enumerate}
+\xe
+
+This algorithm should seem familiar to the algorithm in \LLast. Essentially, proceeding bottom-up in a syntax tree, it is identical. First you project the direct object to a tier, and then you project the indirect object to the tier if and only if the direct object does not have a better (1>2>3) person feature than it.
+
+For the same reason why Uyghur backness harmony cannot be captured with TSL, Mundari object agreement also cannot be captured with TSL. The only licit bigrams in this case should be `[-iɲ] [1st-person DP]', `[-m] [2nd-person DP]', and `[-i] [nothing/3rd-person DP]'. But if you project both first and second person DPs to the tier, then a 2nd-person DP you project after a 1st-person DP will overpower it. If you project only 1st-person DPs to the tier, you won't be able to capture cases with only 2nd-person DPs.
+
+The solution is again OTSL: project 2nd-person DPs if and only if the last thing you projected wasn't a 1st-person DP.
+
+The reason why this is so interesting for me is because it introduces a notion of \textbf{derivational timing} and \textbf{directionality} to TSL. With TSL and not OTSL, we could just as easily say we started at the top of a tree, or the end of a word when projecting nodes to a tier. Now, we must start at the beginning, or at the bottom, and move up. Furthermore, certain operations must happen `before' other operations, because operations are mutually dependent on one another.
+
+(It may also end up being the case that we actually need to also have the ability to condition whether a node projects to a tier based on the \textit{next highest} node projected to the tier, but this would cause a lot of problems, and it doesn't seem motivated empirically.)

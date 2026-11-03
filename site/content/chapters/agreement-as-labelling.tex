@@ -4,3 +4,113 @@
 I demonstrate that a variant of the TSL class known as ‘output-sensitive TSL’ (OTSL) can be made equivalent to a certain \textbf{labelling algorithm} for Merge, and that this labelling algorithm is the local instantiation of a certain formulation of Probe-Goal Agree. Building from an intuition present in \citet{graf2018}, I argue that this makes Agree essentially an epiphenomenon of Merge.
 
 The mathematical properties of this labelling algorithm are crucial to what kinds of agreement patterns appear cross-linguistically. For example, a labelling algorithm which is associative predicts that the features of a non-terminal mother of [X[YZ]] always be the same as the features of a non-terminal mother of [[XY]Z], ruling out specific agreement patterns I term `rock paper scissors' patterns below.
+
+\section{Labelling algorithms}
+
+A \textbf{labelling algorithm} is a function which distributes features across a tree. Since only \hyperref[left-nodes]{left nodes} have inherent features, the input to a labelling algorithm is a list of left nodes with valued features, and its output is a list of left and right nodes with valued features. 
+
+For example, in the sentence \textit{lemurs like lemonade}, a simple tree might have five left nodes: V, DP, \textit{v}, DP, T. Each node has inherent features:
+
+\ex \dref{lemurs-inherent}
+\begin{forest}
+[TP, name=tp
+  [T\feat{[ ]}, name=t]
+  [\vP, name=vp
+    [DP\feat{[3, +pl]} \\ \textit{lemurs}, name=subj]
+    [\lv\1
+      [\lv\feat{[ ]}]
+      [VP
+        [DP\feat{[3, –pl]} \\ \textit{lemonade}]
+        [V\1
+          [V\feat{[ ]}]
+          [\rt{like}]]]]]]
+\end{forest}
+\xe
+
+Somehow, the features of some left nodes need to influence the features of other left nodes -- this is what defines agreement as a phenomena. At the end of the derivation, T needs to have the [+pl] feature. 
+
+The intuition connecting Probe-Goal Agree with Tier-based Strictly Local Agree is that you can draw a path on the tree from the node that originates the transferred feature to the node that ends up with it. I will call the former node the \textbf{source} and the latter the \textbf{heir}. 
+
+\ex \dref{lemurs-path}
+\begin{forest}
+[TP, name=tp
+  [T\feat{[ ]}, name=t]
+  [\vP, name=vp
+    [DP\feat{[3, +pl]} \\ \textit{lemurs}, name=subj]
+    [\lv\1
+      [\lv\feat{[ ]}]
+      [VP
+        [DP\feat{[3, –pl]} \\ \textit{lemonade}]
+        [V\1
+          [V\feat{[ ]}]
+          [\rt{like}]]]]]]
+\draw[->, blue, thick] (subj) to[out=north, in=west] (vp);
+\draw[->, blue, thick] (vp) to[out=north, in=east] (tp);
+\draw[->, blue, thick, dashed] (tp) to[out=west, in=north] (t);
+\node[below=3pt, text=blue, font=\small] at (subj.south) {\textit{source}};
+\node[left=3pt, text=blue, font=\small] at (t.west) {\textit{heir}};
+\end{forest}
+\xe
+
+The intuition behind using a labelling algorithm for agreement is that you transfer the relevant feature up the path one step at a time. Merge already needs a labelling algorithm to transfer category labels from terminals to non-terminals; the labelling algorithm presented here just operates on more feature types. 
+
+The relevant feature value of the source travels up the tree through right nodes until it reaches the heir's mother. Then, it is copied onto the heir. This last step is necessary because only left nodes (and the lexical root) are actually pronounced. 
+
+\subsection{Mother and daughter functions}
+
+Each labelling algorithm needs two sub-algorithms: a mother function and a daughter function.
+
+\begin{itemize}
+  \item The \textbf{mother function} takes in a left node and a right node, and computes a mother node.
+  \item The \textbf{daughter function} somehow modifies the features of left nodes in the tree, after the mother function has run over it.
+\end{itemize}
+
+Thus to specify a labelling algorithm, one needs to specify properties of the algorithm itself, properties of the mother function, and properties of the daughter function. 
+
+\subsection{An example}\label{sec:labelling-example}
+
+To see how this works for \textit{lemurs like lemonade}, we can examine the number features on the tree, and use the following basic labelling algorithm:
+
+\begin{description}
+  \item[Mother function:] the mother copies its left daughter's value, unless it is unvalued, in which case it copies its right daughter's.
+  \item[Daughter function:] an unvalued left node copies its mother's value.
+\end{description}
+
+The mother function runs first, from the bottom of the tree up \Next. V\1 stays unvalued, since neither V nor the root has a number value. VP copies its left daughter, the object: [–pl]. \textit{v}$'$ would copy \textit{v}, but \textit{v} is unvalued, so it copies VP instead and also ends up [–pl]. \vP copies the subject, its left daughter: [+pl]. Finally TP would copy T, but T is unvalued, so it copies \vP and ends up [+pl].
+
+\ex \dref{lemurs-mother}
+\begin{forest}
+[TP\feat{+pl}, name=tp
+  [T\feat{–}]
+  [\vP\feat{+pl}, name=vp
+    [DP\feat{+pl} \\ \textit{lemurs}, name=subj]
+    [\lv\1\feat{–pl}
+      [\lv\feat{–}]
+      [VP\feat{–pl}
+        [DP\feat{–pl} \\ \textit{lemonade}]
+        [V\1\feat{–}
+          [V\feat{–}]
+          [\rt{like}]]]]]]
+\draw[->, blue] (subj) to[out=north, in=west] (vp);
+\draw[->, blue] (vp) to[out=north, in=east] (tp);
+\end{forest}
+\xe
+
+The daughter function then runs from the top down \Next. T is an unvalued left node, so it copies its mother, TP, and becomes [+pl], yielding \textit{like} rather than \textit{likes}. The value has travelled from the source, \textit{lemurs}, up through \vP to the heir's mother, TP, and then been copied onto the heir T. \textit{v} copies its mother in the same way and becomes [–pl], the object's number - English doesn't realize number features on \textit{v}, but this is how object agreement in many languages is assumed to work. The two DPs keep their number values, since they were never unvalued.
+
+\ex \dref{lemurs-daughter}
+\begin{forest}
+[TP\feat{+pl}, name=tp
+  [T\feat{+pl} \\ \nothing, name=t]
+  [\vP\feat{+pl}
+    [DP\feat{+pl} \\ \textit{lemurs}]
+    [\lv\1\feat{–pl}
+      [\lv\feat{–pl}]
+      [VP\feat{–pl}
+        [DP\feat{–pl} \\ \textit{lemonade}]
+        [V\1\feat{–}
+          [V\feat{–}]
+          [\rt{like}]]]]]]
+\draw[->, blue, dashed] (tp) to[out=west, in=north] (t);
+\end{forest}
+\xe

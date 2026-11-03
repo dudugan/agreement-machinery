@@ -86,10 +86,10 @@
       "chapters": [
         "chapters/equivalence-to-probe-goal-agree.tex",
         "chapters/equivalence-to-otsl-agree.tex",
-        "chapters/labelling-algorithms.tex",
-        "chapters/left-and-right-syntactic-nodes.tex",
-        "chapters/properties-of-mother-functions.tex",
-        "chapters/properties-of-daughter-functions.tex"
+        "chapters/undeveloped-ideas.tex",
+        "chapters/otsl-mtsm-equivalence.tex",
+        "chapters/things-to-do.tex",
+        "chapters/python-implementation.tex"
       ]
     }
   ],
