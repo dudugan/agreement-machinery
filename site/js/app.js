@@ -300,7 +300,10 @@ function relayout(){
   layoutNotes(page);
 }
 function layoutWide(page){
-  const els=[...page.querySelectorAll("article > .ex, article > .cols, article > .diagram, article > .glossblock")];
+  // only glosses and drawn diagrams (trees, TikZ, head chains) may spill into the margin; prose wraps in the column
+  const fig=".diagram, .glossblock";
+  const els=[...page.querySelectorAll("article > .ex, article > .cols, article > .diagram, article > .glossblock")]
+    .filter(e=>e.matches(fig)||e.querySelector(fig));
   els.forEach(e=>{ e.style.width=""; e.classList.remove("wide"); });
   const margin=page.querySelector(".margin"), note=margin&&margin.querySelector(".note");
   if(!margin || getComputedStyle(margin).display==="none" && !document.body.classList.contains("hideright")) return;
