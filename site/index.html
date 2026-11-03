@@ -17,8 +17,8 @@
       </div>
       <nav class="tabs">
         <a data-tab="machinery" class="on" data-go="introduction">The Machinery</a>
-        <a data-tab="encyclopedia" data-go="encyclopedia">The Encyclopedia</a>
-        <a data-tab="bibliography" data-go="bibliography">Bibliography</a>
+        <a data-tab="encyclopedia" data-go="encyclopedia" hidden>Old Encyclopedia</a><!-- archived; remove "hidden" to bring it back -->
+        <a data-tab="bibliography" data-go="bibliography">The Encyclopedia</a>
         <a data-tab="about" data-go="about">About</a>
       </nav>
     </div>
@@ -45,7 +45,7 @@
   <div id="loading" class="loading">transducing…</div>
 
   <section class="page" data-page="encyclopedia"><div class="single shelf">
-    <h1 class="title">The Encyclopedia</h1>
+    <h1 class="title">Old Encyclopedia</h1>
     <div class="meta" id="enc-meta"></div>
     <div class="enc-tools">
       <input class="search enc-search" id="enc-q" placeholder="specify ahead…">
@@ -61,7 +61,7 @@
   </div></section>
 
   <section class="page" data-page="phen"><div class="single">
-    <p class="crumb"><a class="back" data-go="encyclopedia">← The Encyclopedia</a></p>
+    <p class="crumb"><a class="back" data-go="encyclopedia">← Old Encyclopedia</a></p>
     <h1 class="title" id="ph-title"></h1>
     <div class="meta" id="ph-meta"></div>
     <div class="card" id="ph-card"></div>
@@ -70,7 +70,7 @@
   </div></section>
 
   <section class="page" data-page="bibliography"><div class="single">
-    <h1 class="title">Bibliography</h1>
+    <h1 class="title">The Encyclopedia</h1>
     <div class="meta" id="bib-meta"></div>
     <ul class="bib" id="bib-list"></ul>
   </div></section>
@@ -78,7 +78,7 @@
   <section class="page" data-page="about"><div class="single">
     <h1 class="title">About</h1>
     <div class="meta">this page is a work in progress</div>
-    <article><p>This website is the knowledge base of an independent study and thesis project for the Yale linguistics department, compiled from LaTeX files.</p></article>
+    <article><p>This website is the knowledge base and working draft of an independent study and thesis project for the Yale Linguistics Department. The draft is compiled from LaTeX files. Credit to Claire Wang's <a href="https://invisible-cities.vercel.app/" target="_blank" rel="noopener">Invisible Cities</a> for the CSS vibe.</p></article>
   </div></section>
 
   <section class="page" data-page="stub"><div class="single">

@@ -490,6 +490,7 @@ mark.rq.hot{background:rgba(30,84,88,.16)}
   border:1px solid var(--rule);background:var(--paper);padding:6px 10px}
 .pdfbtn:hover{color:var(--ink);border-color:var(--tan)}
 .toolbar .pdfbtn + .search{margin-left:10px}
+button.pdfbtn{font-family:inherit;cursor:pointer}
 @media (max-width:980px){ .pdfbtn{order:3;margin-left:0} }
 
 /* ---------- the book (index.html?print), also what the PDF is printed from ---------- */

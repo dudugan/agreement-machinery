@@ -2,9 +2,11 @@
 
     python3 thesis/build.py            # writes site/agreement-machinery.pdf
 
-Chapters come from site/content/manifest.json in reading order (undrafted chapters are skipped);
-each one's  %% title:  becomes its \\chapter, titled parts become \\part. The user's preamble
-(site/content/macros.tex) is loaded as is, and thesis/preamble.tex supplies the packages.
+The reading order comes from site/content/manifest.json: each part becomes a \\chapter and each of
+its files a \\section titled by the file's  %% title:  (headings inside a file move down one level).
+Every part and file appears, so the contents match the website's (part 2, file 3 is section 2.3);
+an undrafted file is just its heading and "Not yet drafted."
+The user's preamble (site/content/macros.tex) is loaded as is, and thesis/preamble.tex supplies the packages.
 Needs XeLaTeX and biber (TeX Live / TinyTeX).
 """
 import json, os, re, shutil, subprocess, sys
@@ -199,6 +201,14 @@ def pstricks_to_tikz(src):
 EX_LABELS = set()  # filled in main(): every \dref / \deftagex label in the book
 
 
+SUB = {"": "subsection", "sub": "subsubsection", "subsub": "paragraph"}
+
+
+def demote(src):
+    """A file is a \\section in the PDF, so its own headings go one level down."""
+    return re.sub(r"\\((?:sub)*)section(?![a-zA-Z])", lambda m: "\\" + SUB.get(m.group(1), m.group(1) + "section"), src)
+
+
 def transform(src):
     """Turn site-only notation into plain LaTeX."""
     out, i = "", 0
@@ -223,7 +233,7 @@ def transform(src):
     out = re.sub(r"\\(pex|ex)\s*\\(?:dref|deftagex)\{([^}]*)\}\s*", lambda m: f"\\{m.group(1)}<{m.group(2)}> ", out)
     # a nodestream form's driver code only makes sense on the website
     out = re.sub(r"(\\end\{nodestream\}\s*)\\begin\{minted\}\{python\}[\s\S]*?\\end\{minted\}", r"\1", out)
-    return out
+    return demote(out)
 
 
 def main():
@@ -245,23 +255,21 @@ def main():
             if os.path.exists(path):
                 EX_LABELS.update(re.findall(r"\\(?:dref|deftagex)\{([^}]*)\}", open(path, encoding="utf-8").read()))
     body = []
-    for part in manifest["parts"]:
-        chapters = []
-        for f in part["chapters"]:
+    for pi, part in enumerate(manifest["parts"], 1):
+        sections = []
+        for k, f in enumerate(part["chapters"], 1):
             path = os.path.join(SITE, f)
             if not os.path.exists(path):
                 continue
             src = open(path, encoding="utf-8").read()
-            if is_stub(src):
-                continue
             meta = front_matter(src)
             name = os.path.splitext(os.path.basename(f))[0]
             open(os.path.join(BUILD, name + ".tex"), "w", encoding="utf-8").write(transform(src))
-            chapters.append(rf"\chapter{{{meta.get('title', name)}}}" + "\n" + rf"\input{{{name}}}")
-        if chapters:
-            if part.get("title"):
-                body.append(rf"\part{{{part['title']}}}")
-            body.extend(chapters)
+            stub = "\n" + r"\textit{Not yet drafted.}" if is_stub(src) else ""
+            # the counter keeps a section's website number even if an earlier file is missing
+            sections.append(rf"\setcounter{{section}}{{{k - 1}}}\section{{{meta.get('title', name)}}}" + "\n" + rf"\input{{{name}}}" + stub)
+        body.append(rf"\setcounter{{chapter}}{{{pi - 1}}}\chapter{{{part.get('title', '')}}}")
+        body.extend(sections)
 
     # phonetic characters Latin Modern doesn't have: set them in Charis SIL (see preamble.tex)
     text = "".join(open(os.path.join(BUILD, f), encoding="utf-8").read() for f in os.listdir(BUILD) if f.endswith(".tex"))

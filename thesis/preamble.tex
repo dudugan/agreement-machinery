@@ -69,5 +69,7 @@
 \tikzset{every node/.append style={font=\linespread{1}\selectfont}}
 \lingset{everyex={\setstretch{1}}}
 
-%% examples are numbered (1), (2), … afresh in each chapter, as on the website
-\AddToHook{cmd/chapter/before}{\global\excnt=1\relax}
+%% examples are numbered (1), (2), … afresh in each section (one website page), as on the website
+\AddToHook{cmd/section/before}{\global\excnt=1\relax}
+%% sections inside a page are \subsubsections here; number them as the website does (2.3.1.1)
+\setcounter{secnumdepth}{3}

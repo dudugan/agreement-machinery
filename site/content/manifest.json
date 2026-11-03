@@ -10,48 +10,86 @@
   ],
   "parts": [
     {
-      "title": "",
+      "title": "Introduction",
       "chapters": [
-        "chapters/introduction.tex"
+        "chapters/introduction.tex",
+        "chapters/tier-based-strict-locality.tex",
+        "chapters/probe-goal-agree.tex",
+        "chapters/agreement-as-labelling.tex",
+        "chapters/roadmap.tex"
       ]
     },
     {
       "title": "The Labelling Algorithm",
       "chapters": [
         "chapters/auxiliary-assumptions.tex",
-        "chapters/left-and-right-syntactic-nodes.tex",
-        "chapters/labelling-algorithms.tex",
-        "chapters/properties-of-mother-functions.tex",
-        "chapters/properties-of-daughter-functions.tex",
+        "chapters/canonical-labelling.tex",
+        "chapters/forward-and-backward-passes.tex",
         "chapters/properties-of-labelling-algorithms.tex",
-        "chapters/specifiers-and-adjuncts.tex",
-        "chapters/dependency-and-constituency-trees.tex",
-        "chapters/cross-linguistic-variation.tex"
+        "chapters/derivational-timing.tex"
       ]
     },
     {
-      "title": "Examples",
+      "title": "Initial case studies",
       "chapters": [
-        "chapters/english-subject-verb-agreement.tex",
         "chapters/english-expletive-agreement.tex",
-        "chapters/italian-participle-agreement.tex",
-        "chapters/concord.tex"
+        "chapters/mundari-multiple-agreement.tex"
       ]
     },
     {
-      "title": "Other Theories",
+      "title": "Specifiers and Heads",
       "chapters": [
-        "chapters/tsl-agreement.tex",
-        "chapters/otsl-agreement.tex",
-        "chapters/probe-goal-agreement.tex"
+        "chapters/italian-participial-agreement.tex",
+        "chapters/arabic-partial-agreement.tex"
       ]
     },
     {
-      "title": "Extensions",
+      "title": "Backward passes",
       "chapters": [
-        "chapters/vowel-harmony.tex",
-        "chapters/semantic-phenomena.tex",
-        "chapters/movement.tex"
+        "chapters/arabic-case-in-small-clauses.tex",
+        "chapters/german-phi-concord.tex",
+        "chapters/akkadian-case-and-definiteness-concord.tex",
+        "chapters/lubukusu-logophors.tex"
+      ]
+    },
+    {
+      "title": "Movement",
+      "chapters": [
+        "chapters/icelandic-dative-intervention.tex",
+        "chapters/tsez-long-distance-agreement.tex",
+        "chapters/hindi-urdu-object-agreement.tex"
+      ]
+    },
+    {
+      "title": "Other case studies",
+      "chapters": [
+        "chapters/georgian-leftover-agreement.tex",
+        "chapters/basque-coordination.tex",
+        "chapters/kiswahili.tex",
+        "chapters/kinyarwanda.tex",
+        "chapters/zulu.tex"
+      ]
+    },
+    {
+      "title": "Conclusion",
+      "chapters": [
+        "chapters/likely-properties-of-labelling.tex",
+        "chapters/methodology-for-future-work.tex",
+        "chapters/labelling-in-minimalism.tex",
+        "chapters/cross-linguistic-variation.tex",
+        "chapters/interfacial-passes.tex",
+        "chapters/core-syntactic-operations.tex"
+      ]
+    },
+    {
+      "title": "Appendix",
+      "chapters": [
+        "chapters/equivalence-to-probe-goal-agree.tex",
+        "chapters/equivalence-to-otsl-agree.tex",
+        "chapters/labelling-algorithms.tex",
+        "chapters/left-and-right-syntactic-nodes.tex",
+        "chapters/properties-of-mother-functions.tex",
+        "chapters/properties-of-daughter-functions.tex"
       ]
     }
   ],

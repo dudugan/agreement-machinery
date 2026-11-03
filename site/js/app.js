@@ -4,7 +4,6 @@
 const BASE="content/";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const pop=$("#pop"); let popT;
-const ROMAN=["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
 const cap=w=>w?w[0].toUpperCase()+w.slice(1):"";
 const pad=n=>String(n).padStart(2,"0");
 const strip=h=>{ const d=document.createElement("div"); d.innerHTML=h; return d.textContent.replace(/\s+/g," ").trim(); };
@@ -19,8 +18,9 @@ const [macroSrc, bibSrc]=await Promise.all([text(BASE+manifest.macros).catch(()=
 const st=LaTeX.makeState(LaTeX.parseMacros(macroSrc));
 const bib=LaTeX.parseBib(bibSrc, st);
 
+// each part is a chapter of the thesis and each file a section of it, numbered "part.section" (e.g. 2.3)
 const chapters=[]; // {id,file,part,n}
-manifest.parts.forEach((p,pi)=>p.chapters.forEach(f=>chapters.push({file:f, part:pi})));
+manifest.parts.forEach((p,pi)=>p.chapters.forEach((f,k)=>chapters.push({file:f, part:pi, n:`${pi+1}.${k+1}`})));
 const slug=f=>f.replace(/^.*\//,"").replace(/\.tex$/,"");
 const [chapSrc, phenSrc]=await Promise.all([
   Promise.all(chapters.map(c=>text(BASE+c.file).catch(()=>null))),
@@ -29,11 +29,11 @@ const [chapSrc, phenSrc]=await Promise.all([
 
 const META={}, DOCS=[];
 chapters.forEach((c,i)=>{
-  c.id=slug(c.file); c.n=i+1;
+  c.id=slug(c.file);
   const src=chapSrc[i]??"";
   const doc=LaTeX.parseDocument(c.id, src, st, c.n);
   const m=doc.meta;
-  META[c.id]={title:m.title||cap(c.id.replace(/-/g," ")), cat:cap(m.category||""), catKey:(m.category||"").toLowerCase(), n:c.n, part:c.part, doc,
+  META[c.id]={title:m.title||cap(c.id.replace(/-/g," ")), cat:cap(m.category||""), catKey:(m.category||"").toLowerCase(), n:c.n, part:c.part, file:c.file, doc,
     missing:chapSrc[i]==null, stub:!strip(doc.html)};
   DOCS.push([c.id, META[c.id].title, META[c.id].catKey]);
 });
@@ -58,7 +58,6 @@ const docOf=id=>META[id]?.doc;
 /* ---------- build chapter pages ---------- */
 const pages=$("#pages");
 const SYN={};
-const total=chapters.length;
 chapters.forEach((c,i)=>{
   const M=META[c.id], d=M.doc;
   SYN[c.id]=d.abstract?strip(d.abstract):"";
@@ -67,9 +66,9 @@ chapters.forEach((c,i)=>{
   const notes=d.notes.map(n=>`<div class="note ${n.kind==="fn"?"fn":"com"}" data-n="${n.id}"><span class="k">${n.kind==="fn"?n.n:"◆"}</span><div>${n.html}<br><span class="tag">${n.kind==="fn"?"footnote":"comment"}</span></div></div>`).join("");
   const sec=document.createElement("section");
   sec.className="page"; sec.dataset.page=c.id;
-  const stats=[`chapter ${pad(c.n)} of ${pad(total)}`, d.examples?`${d.examples} example${d.examples>1?"s":""}`:null, d.diagramCount?`${d.diagramCount} diagram${d.diagramCount>1?"s":""}`:null, d.notes.length?`${d.notes.length} note${d.notes.length>1?"s":""}`:null].filter(Boolean).join(" · ");
+  const stats=[`section ${c.n} · ${manifest.parts[c.part].title}`, d.examples?`${d.examples} example${d.examples>1?"s":""}`:null, d.diagramCount?`${d.diagramCount} diagram${d.diagramCount>1?"s":""}`:null, d.notes.length?`${d.notes.length} note${d.notes.length>1?"s":""}`:null].filter(Boolean).join(" · ");
   sec.innerHTML=`<div class="pagegrid"><article>
-      <p class="crumb">${M.cat?M.cat+" · ":""}Chapter ${c.n}</p>
+      <p class="crumb">${M.cat?M.cat+" · ":""}Section ${c.n}</p>
       <h1 class="title">${M.title}</h1>
       <div class="meta">${stats}</div>
       ${d.abstract?`<div class="abstract"><span class="lbl">Tl;dr</span>${d.abstract}</div>`:""}
@@ -96,11 +95,11 @@ chapters.forEach((c,i)=>{
     if(L!==letter){ letter=L; html+=`<li class="letter">${L}</li>`; }
     const where=[...(citedIn[e.key]||new Map()).values()].map(({d,sec})=>{
       if(d.id.startsWith("ph-")){ const p=PHEN.find(x=>"ph-"+x.id===d.id); return `<a data-go="ph:${p.id}">${strip(p.name)}</a>`; }
-      const M=META[d.id]; return `<a data-go="${d.id}"${sec?` data-to="${sec.id}"`:""}>ch. ${M.n}${sec&&sec.num?" §"+sec.num:""}</a>`; }).join(" ");
+      const M=META[d.id]; return `<a data-go="${d.id}"${sec?` data-to="${sec.id}"`:""}>§${sec&&sec.num?sec.num:M.n}</a>`; }).join(" ");
     html+=`<li id="bib-${e.key}">${e.html}${where?`<span class="by">cited in ${where}</span>`:`<span class="by">not cited yet</span>`}</li>`;
   });
   $("#bib-list").innerHTML=html;
-  $("#bib-meta").textContent=`${entries.length} works · each entry lists where it is cited`;
+  $("#bib-meta").textContent=`${entries.length} works`;
 })();
 
 /* ---------- sidebar ---------- */
@@ -111,10 +110,10 @@ const side=$("#side");
 function renderSide(){
   const q=$("#search").value.trim().toLowerCase();
   const match=([id,t])=>!q||t.toLowerCase().includes(q)||strip(SYN[id]||"").toLowerCase().includes(q);
-  const li=([id,t])=>`<li><a data-go="${id}" class="${id===current?"on":""}${META[id].stub?" stub":""}"><span class="n">${pad(META[id].n)}</span>${t}</a></li>`;
+  const li=([id,t])=>`<li><a data-go="${id}" class="${id===current?"on":""}${META[id].stub?" stub":""}"><span class="n">${META[id].n}</span>${t}</a></li>`;
   let h="";
-  if(mode==="order"){ let rn=0; PARTS.forEach((name,i)=>{ if(name) rn++; const docs=DOCS.filter(d=>META[d[0]].part===i && match(d));
-    if(docs.length) h+=`${name?`<h4><span class="rn">${ROMAN[rn]}</span>${name}</h4>`:""}<ol${name?"":' class="untitled"'}>${docs.map(li).join("")}</ol>`; }); }
+  if(mode==="order"){ PARTS.forEach((name,i)=>{ const docs=DOCS.filter(d=>META[d[0]].part===i && match(d));
+    if(docs.length) h+=`${name?`<h4><span class="rn">${i+1}</span>${name}</h4>`:""}<ol${name?"":' class="untitled"'}>${docs.map(li).join("")}</ol>`; }); }
   else CATS.forEach(c=>{ const docs=DOCS.filter(d=>d[2]===c && match(d)); if(docs.length) h+=`<h4>${cap(c)}</h4><ol>${docs.map(li).join("")}</ol>`; });
   side.innerHTML=h||`<div class="empty">nothing matches “${LaTeX.esc(q)}”</div>`;
 }
@@ -180,7 +179,7 @@ function restack(animate=true){
   order.forEach(b=>stack.insertBefore(stack.querySelector(`[data-id="${b.id}"]`),stack.querySelector(".empty")));
   let row=0; order.forEach(b=>{ const el=stack.querySelector(`[data-id="${b.id}"]`); if(!el.classList.contains("gone")) el.classList.toggle("alt", row++%2===1); }); // zebra rows
   stack.querySelector(".empty").style.display=shown?"none":"block";
-  $("#enc-meta").textContent=`${shown} of ${PHEN.length} volumes · click a spine to open it · click a heading to restack`;
+  $("#enc-meta").textContent=`archived · ${shown} of ${PHEN.length} volumes · click a spine to open it · click a heading to restack`;
   if(!animate) return;
   books.forEach(el=>{ if(el.classList.contains("gone")) return; const a=first.get(el), b=el.getBoundingClientRect();
     if(!a.height) return; const dy=a.top-b.top; if(!dy) return;
@@ -202,9 +201,9 @@ function renderPhen(pid){
   $("#ph-title").innerHTML=b.name;
   $("#ph-meta").textContent=`phenomenon · volume ${pad(i+1)} of ${pad(PHEN.length)}`;
   const disc=b.discussed.map(k=>{ const L=st.labels[k]; if(!L) return `<span class="unk">${LaTeX.esc(k)}</span>`; const M=META[L.doc];
-    if(L.kind==="sec") return `<a class="xref" data-go="${L.doc}" data-to="${L.id}">Chapter ${M.n} §${L.num} · ${M.title}</a>`;
-    if(L.kind==="ex") return `<a class="xref" data-ex="${L.id}">(${L.num}) in Chapter ${M.n}</a>`;
-    return `<a class="xref" data-go="${L.doc}">Chapter ${M.n} · ${M.title}</a>`; }).join("<br>");
+    if(L.kind==="sec") return `<a class="xref" data-go="${L.doc}" data-to="${L.id}">§${L.num} · ${M.title}</a>`;
+    if(L.kind==="ex") return `<a class="xref" data-ex="${L.id}">(${L.num}) in §${M.n}</a>`;
+    return `<a class="xref" data-go="${L.doc}">§${M.n} · ${M.title}</a>`; }).join("<br>");
   $("#ph-card").innerHTML=`<div class="spine"></div><dl>
     <dt>language</dt><dd>${b.lang}</dd><dt>probe</dt><dd>${b.probe}</dd><dt>goal</dt><dd>${b.goal}</dd>
     <dt>features</dt><dd>${b.feats.map((f,k)=>`${f} <span style="color:var(--muted);font-size:15px">${FEAT[b.featText[k]]||""}</span>`).join(" &nbsp;·&nbsp; ")}</dd>
@@ -223,9 +222,9 @@ function go(id, to, {push=true}={}){
   if(id.startsWith("ph:")){ page="phen"; if(!renderPhen(id.slice(3))) { id="encyclopedia"; page=id; } }
   else if(META[id] && META[id].stub){
     page="stub"; const m=META[id];
-    $("#stub-crumb").textContent=`${m.cat?m.cat+" · ":""}Chapter ${m.n}`;
+    $("#stub-crumb").textContent=`${m.cat?m.cat+" · ":""}Section ${m.n}`;
     $("#stub-title").textContent=m.title;
-    $("#stub-msg").innerHTML=m.missing?`The file <code>${chapters[m.n-1].file}</code> could not be found.`:`This chapter has not been drafted yet.`;
+    $("#stub-msg").innerHTML=m.missing?`The file <code>${m.file}</code> could not be found.`:`This section has not been drafted yet.`;
   }
   else if(!document.querySelector(`.page[data-page="${id}"]`)){ id=chapters[0]?.id||"about"; page=id; }
   const same=id===current;
@@ -366,7 +365,7 @@ document.addEventListener("mouseover",e=>{
       const clone=host.cloneNode(true); clone.removeAttribute("id"); clone.removeAttribute("style"); clone.classList.remove("flash","wide");
       clone.querySelectorAll("[id]").forEach(n=>n.removeAttribute("id")); clone.querySelectorAll(".conn-layer").forEach(n=>n.remove());
       clone.querySelectorAll(".exbody").forEach(n=>n.removeAttribute("style"));
-      showPop(a,`<div class="pk">${M?`Chapter ${M.n} · ${M.title}`:"Example"}</div>`+clone.outerHTML, "ex-pop");
+      showPop(a,`<div class="pk">${M?`§${M.n} · ${M.title}`:"Example"}</div>`+clone.outerHTML, "ex-pop");
     } else if(a.dataset.bib){
       const li=document.getElementById("bib-"+a.dataset.bib); if(!li) return;
       const c=li.cloneNode(true); c.querySelector(".by")?.remove();
@@ -374,19 +373,43 @@ document.addEventListener("mouseover",e=>{
     } else if(a.dataset.go && META[a.dataset.go]){
       const m=META[a.dataset.go]; let sec="";
       if(a.dataset.to){ const h=document.getElementById(a.dataset.to); if(h) sec=` · §${h.querySelector(".num")?.textContent||""}`; }
-      showPop(a,`<div class="pk">${m.cat?m.cat+" · ":""}Chapter ${m.n}${sec}</div><div class="pt">${m.title}</div><div>${SYN[a.dataset.go]||"<i>Not yet drafted.</i>"}</div>`);
+      showPop(a,`<div class="pk">${m.cat?m.cat+" · ":""}Section ${m.n}${sec}</div><div class="pt">${m.title}</div><div>${SYN[a.dataset.go]||"<i>Not yet drafted.</i>"}</div>`);
     }
   },180);
 });
 document.addEventListener("mouseout",e=>{ if(e.target.closest(".xref,.cite")){ clearTimeout(popT); hidePop(); } });
 
-/* "Read as PDF": the PDF made when the site is published; in a local preview there isn't one yet,
-   so open the printable book view instead */
-$("#pdfbtn").addEventListener("click",async e=>{
+/* "Read as PDF" opens the PDF in a new tab: on the published site, the one GitHub built (or the printable
+   web version if that build failed). In the local preview, site/serve.py compiles it first, so it always
+   matches the current .tex files and manifest. */
+const pdfbtn=$("#pdfbtn"), LOCAL=/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+pdfbtn.addEventListener("click",async e=>{
   e.preventDefault();
-  const w=window.open("","_blank");
+  if(pdfbtn.dataset.busy) return;
+  const w=window.open("","_blank"); // opened during the click, or the browser blocks it
+  const open=url=>{ if(w) w.location=url; else location.href=url; };
+  const show=(title,msg,error)=>{ // in the new tab, or in a box on this page if pop-ups are blocked
+    const pre=`<pre style="white-space:pre-wrap;font:13px/1.55 ui-monospace,Menlo,monospace;margin:0;padding:28px;max-width:960px">${LaTeX.esc(msg)}</pre>`;
+    if(w){ w.document.title=title; w.document.body.innerHTML=pre; return; }
+    if(!error) return;
+    let dlg=$("#builddlg");
+    if(!dlg){ dlg=document.createElement("dialog"); dlg.id="builddlg"; dlg.style.cssText="max-width:min(1000px,92vw);max-height:85vh;padding:0;border:1px solid var(--rule);background:var(--paper)";
+      dlg.addEventListener("click",e=>{ if(e.target===dlg) dlg.close(); }); document.body.appendChild(dlg); }
+    dlg.innerHTML=`<form method="dialog" style="text-align:right;padding:10px 14px 0"><button class="pdfbtn">Close</button></form>`+pre; dlg.showModal(); };
+  if(LOCAL){
+    const label=pdfbtn.textContent; pdfbtn.dataset.busy="1"; pdfbtn.textContent="Compiling…";
+    show("Compiling…","Compiling the PDF with LaTeX…");
+    try{
+      const r=await fetch("build-pdf",{method:"POST"});
+      if(r.ok){ const {ok,log}=await r.json();
+        if(ok) open("agreement-machinery.pdf?"+Date.now()); else show("PDF build failed","The PDF build failed.\n\n"+log,true);
+        return; }
+      // a server that can't compile (not site/serve.py): open whatever PDF is there, as on the published site
+    }catch(_){}
+    finally{ delete pdfbtn.dataset.busy; pdfbtn.textContent=label; }
+  }
   let ok=false; try{ ok=(await fetch("agreement-machinery.pdf",{method:"HEAD",cache:"no-cache"})).ok; }catch(_){}
-  w.location=ok?"agreement-machinery.pdf":"./?print";
+  open(ok?"agreement-machinery.pdf?"+Date.now():"./?print");
 });
 
 /* ---------- the book: every drafted chapter in reading order, for printing to PDF ----------
@@ -400,11 +423,10 @@ async function buildBook(){
   document.body.classList.add("book");
   const book=document.createElement("div"); book.id="book";
   const live=chapters.filter(c=>!META[c.id].stub);
-  let toc="", rn=0;
+  let toc="";
   manifest.parts.forEach((p,pi)=>{
-    if(p.title) rn++;
     const chs=live.filter(c=>c.part===pi); if(!chs.length) return;
-    toc+=`${p.title?`<h3><span class="rn">${ROMAN[rn]}</span>${p.title}</h3>`:""}<ol>${chs.map(c=>`<li><a href="#ch-${c.id}"><span class="n">${c.n}</span>${META[c.id].title}</a></li>`).join("")}</ol>`;
+    toc+=`${p.title?`<h3><span class="rn">${pi+1}</span>${p.title}</h3>`:""}<ol>${chs.map(c=>`<li><a href="#ch-${c.id}"><span class="n">${c.n}</span>${META[c.id].title}</a></li>`).join("")}</ol>`;
   });
   const date=new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
   book.innerHTML=`<div class="bk-bar"><a href="./">← back to the site</a><span>This is the printable version of every drafted chapter.</span><button type="button" onclick="window.print()">Print or save as PDF</button></div>

@@ -8,16 +8,16 @@ The site reads LaTeX directly: every page is converted from a `.tex` file in the
 python3 site/serve.py
 ```
 
-Then open http://localhost:8765. The page has to be served over http; opening `index.html` as a file won't work. Reload after editing a `.tex` file.
+Then open http://localhost:8765. The page has to be served over http; opening `index.html` as a file won't work. Reload after editing a `.tex` file. In the local preview, **Read as PDF** compiles the PDF edition on your Mac first, so it's always up to date (see [../thesis/README.md](../thesis/README.md) for the LaTeX it needs).
 
 ## Where things live
 
 | File | What it is |
 | --- | --- |
-| `content/manifest.json` | reading order (parts → chapters), the list of phenomena, the categories, and the names of the feature symbols |
+| `content/manifest.json` | reading order (parts → pages), the list of phenomena, the categories, and the names of the feature symbols. Each part is a chapter of the thesis and each page a section of it, numbered like 2.3 |
 | `content/macros.tex` | your preamble. Every `\newcommand` here is expanded exactly as LaTeX would, and macros in this file override the site's built-ins |
 | `content/refs.bib` | the bibliography (natbib-style `\citet`, `\citep`, `\citealt`, `\citeyear`, …) |
-| `content/chapters/*.tex` | one file per chapter |
+| `content/chapters/*.tex` | one file per page (a section in the PDF) |
 | `content/phenomena/*.tex` | one file per Encyclopedia entry |
 
 ## Metadata blocks
@@ -42,9 +42,9 @@ Phenomena use the same format:
 %% discussed: sec:basic         % one or more \label keys, comma-separated
 ```
 
-A chapter's synopsis is its `abstract` environment. A `\label` placed before the first `\section` labels the chapter itself, so `\ref{ch:agree}` prints "2".
+A page's synopsis is its `abstract` environment. A `\label` placed before the first `\section` labels the page itself, so `\ref{ch:agree}` prints its number, e.g. "2.3". A `\section` inside a page is numbered 2.3.1 (it becomes a `\subsection` in the PDF).
 
-A chapter with no body shows up as "not drafted" in the sidebar.
+A page with no body shows up as "not drafted" in the sidebar.
 
 ## What's understood
 

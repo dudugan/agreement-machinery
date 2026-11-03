@@ -1008,9 +1008,9 @@ function resolve(st, bib, docTitle){
     if(!L){ st.warnings.push(`undefined reference "${r.k}"`); return {html:`<span class="unk" title="undefined label">??</span>`, num:"??", bad:true}; }
     const other = L.doc!==here;
     const chap = docTitle(L.doc);
-    if(L.kind==="ex") return {num:L.num, attrs:`class="xref" data-ex="${L.id}"`, xdoc: other&&chap.n?` of Chapter ${chap.n}`:""};
+    if(L.kind==="ex") return {num:L.num, attrs:`class="xref" data-ex="${L.id}"`, xdoc: other&&chap.n?` of §${chap.n}`:""};
     if(L.kind==="sec") return {num:(r.form==="Auto"?"Section ":r.form==="auto"?"section ":"")+(L.num||L.title), attrs:`class="xref" data-go="${L.doc}" data-to="${L.id}"`, xdoc:"", name:L.title};
-    return {num:(r.form==="Auto"?"Chapter ":r.form==="auto"?"chapter ":"")+chap.n, attrs:`class="xref" data-go="${L.doc}"`, xdoc:"", name:chap.title};
+    return {num:(r.form==="Auto"?"Section ":r.form==="auto"?"section ":"")+chap.n, attrs:`class="xref" data-go="${L.doc}"`, xdoc:"", name:chap.title};
   };
   const reRef=new RegExp(`(\\()?${REF}(.*?)${REF}([a-z]{0,3}(?:[–-][a-z]{1,3})?)(\\))?`,"g");
   for(const d of Object.values(st.docs)){
