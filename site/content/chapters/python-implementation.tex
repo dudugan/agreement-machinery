@@ -110,10 +110,4 @@ def tau(left, right):
         # However, it's important to note that this would fix (2) but not fully (1). OTSL and the MTSM can both condition on nodes below them, and this is fine, because those nodes' feature values have already been decided (i.e., do not condition on anything above them). But once you allow for conditioning on different features of your own node, you need to enforce a strict ordering *between* tiers/feature types. 
 
         # Otherwise, you will have both nodes that condition on features below them, AND nodes that condition on features above them, and this could get quite complex, and doesn't seem like something language would do. 
-
-
-# Comparing MTSM and OTSL
-    # Conservation means that tau is analogous to the tier projection function. 
-        # if tau(l, r) == l: project the current node
-        # if tau(l, r) == r: don't project the current node
 \end{minted}

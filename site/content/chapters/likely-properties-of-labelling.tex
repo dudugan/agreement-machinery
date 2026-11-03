@@ -1,3 +1,131 @@
 %% title: The most likely properties of the labelling algorithm
 %% category: misc
 
+\section{Hypothesized properties}
+
+As an initial hypothesis to be modified, I propose that the labelling algorithm (LA) underlying human syntax has the following properties:
+
+\begin{enumerate}
+    \item \textbf{Nearsighted.} The LA cannot look through pointers between syntactic nodes: it can only see the features of the nodes directly inputted into it, not the features of their daughters.
+    \item \textbf{Noncommutative.} The LA receives ordered inputs: it can see which inputted node is the left daughter, and which is the right daughter.
+    \item \textbf{Duplex.} The LA distinguishes specifier-bar merges from head-complement merges.\footnote{Potentially this is accomplished by distinguishing heads from phrases more generally, or by distinguishing complete semantic objects (specifiers and complements) from incomplete ones (heads and bars). If the former is true, spec-bar merges should have similar behavior to adjunct-phrase merges; if the latter is true, they should have similar behavior to compl-head merges.}
+    \item \textbf{Headed-sequential.} The LA may not contain rules which jointly refer to specifiers and complements: a language-specific LA can be specified with only rules of the form $\tau(\text{head}, \text{compl})$ and $\tau(\text{spec}, \text{bar})$.\footnote{The alternatives are \textbf{Decapitated-sequential}, where the LA first operates over a spec-compl merge, and then over their head, and \textbf{Nonsequential}, where the LA can condition on specifiers, heads, and complements simultaneously.}
+    \item \textbf{Specifier-reading.} The LA may refer to a specifier's features: Spec-Head agreement is possible.
+    \item \textbf{Not adjunct-reading.} The LA may not refer to an adjunct's features.
+    \item \textbf{Tier-blind.} For each pair of feature values in a given LA, there is only one possible mother value: a labelling operation over tier X (e.g. number) cannot make reference to features on tier Y (e.g. person). 
+    \item \textbf{Conservative.} For each mother feature, its value is one of the daughter values. 
+    \item \textbf{Associative.} The mother feature of [X[YZ]] will always be the same as the mother feature of [[XY]Z]: there may be no `rock paper scissors' configurations where value X beats value Y, value Y beats value Z, and value Z beats value X. 
+    \item \textbf{Value-seeking.} If at least one readable daughter is valued for a feature, its mother may not be unvalued for that feature. (Therefore, the LA must be surjective.)
+    \item \textbf{Phase-sharing.}
+\end{enumerate}
+
+\begin{minted}{python}
+### MTSM implementation in Python
+
+tier_list = ['person', 'number', 'gender'] 
+
+# A syntactic node. 
+class snode:
+    def __init__(self, left=None, right=None, mother=None):
+        self.vals = {} # list of tier values
+        for tier in tier_list:
+            self.vals[tier] = None
+        self.left = left # left daughter
+        self.right = right # right daughter
+        self.mother = mother # mother
+    def __repr__(self):
+        return f"snode(vals={self.vals!r})"
+
+# A transducer which gives values to non-terminals, given a transition function. 
+def run_mtsm(input_stream, tau):
+    output_stream = []
+    right = None; # assumes the bottommost right node is a lexical root unvalued for any features.
+    for left in reversed(input_stream):
+        mother = tau(left, right) # tau is the transition function
+        output_stream.insert(0, right)
+        output_stream.insert(0, left)
+        right = mother
+    output_stream.insert(0, right)
+    return output_stream
+
+    # Input: list of left nodes from top to bottom
+    # Output: list of nodes in "right[left right[left right[...]]]" order (all right daughters are even-indexed). 
+
+    # Important: treats specifiers as terminals, and assumes this process has already run on them. 
+    # Important: assumes the strict LCA, and operates over constituency trees, not dependency trees.
+
+# A helper to retrieve the value of a given tier on a given node. 
+def val(node, tier):
+    return None if node is None else node.vals[tier]
+
+# A helper to check that a tree is well-formed. 
+def validate_tree(tree):
+    if len(tree) % 2 == 0: raise ValueError('tree has even number of nodes')
+    if any(val(tree[-1], t) is not None for t in tier_list):
+        raise ValueError('bottom right node is not empty')
+
+# An evaluator which checks if a given tree could have been created with an MTSM or not, given a specific tau. 
+def eval_tauful(tree, tau):
+    validate_tree(tree)
+    for i in range(0, len(tree)-1, 2):
+        mother, left, right = tree[i], tree[i+1], tree[i+2]
+        if any(tau(left, right).vals[t] != val(mother, t) for t in tier_list):
+            return False
+    return True
+
+# An evaluator which checks if there exists a possible tau that could have created this MTSM. 
+def eval_tauless(tree):
+    validate_tree(tree)
+    seen = {} # dict of tier, leftval, rightval -> motherval, to enforce independence
+    for i in range(0, len(tree)-1, 2):
+        mother, left, right = tree[i], tree[i+1], tree[i+2]
+        for tier in tier_list:
+            l, r, m = val(left, tier), val(right, tier), val(mother, tier)
+            if m != l and m != r: 
+                return False # check conservation
+            if seen.setdefault((tier, l, r), m) != m: 
+                return False # check independence
+    return True
+
+# An example tau, which first checks a person feature hierarchy, and then defaults to the left node's feature unless it's unvalued. (This tau is associative.)
+person_hierarchy = {'1': 0, '2': 1, '3': 2}
+def tau(left, right):
+    mother = snode(left, right)
+    for t in tier_list:
+        l, r = val(left, t), val(right, t)
+        if l is None or r is None:
+            mother.vals[t] = r if l is None else l
+        elif t == 'person' and person_hierarchy[r] < person_hierarchy[l]:
+            mother.vals[t] = r
+        else: 
+            mother.vals[t] = l
+    return mother
+
+# A given tree with values is generatable by an MTSM with a conservative and independent transition function tau iff there exists a tree and an initialization of left-node values which produces the output stream via tau. 
+
+#############
+# Other notes:
+    # The current MTSM mandates the following properties of the transition function tau:
+        # 1. conservation: for each tier, the mother value is one of the daughter values.
+        # 2. independence: for each ordered pair of daughter values, there is only one possible mother value.
+
+    # Other properties which the current MTSM doesn't mandate but which might be true:
+        # 3. associativity: tau(tau(left, right), third) = tau(left, tau(right, third)).
+        # 4. propensity for valuedness: if at least one daughter is valued for a feature, the mother cannot be unvalued for that feature. 
+
+    # Dependency trees kind of assume by default that head features overpower specifier features, whereas constituency trees kind of make the opposite assumption, if you assume that everything overtakes the last thing. 
+
+    # Hierarchies are probably universal, but which parts of them are actualized might not be -- e.g. maybe in some languages, 2=3 and 1>both, but in other languages 1=2 and both>3.
+
+    # The current MTSM is more restrictive than OTSL for two reasons, both underspecified in OTSL:
+        # 1. The OTSL tier projection function can potentially condition on any of the current node's features. For example, in TSL syntax, Kenneth often uses this as a tool to project determiners to an agreement tier depending on their case or EPP features. 
+        # 2. The OTSL tier projection function can potentially condition on any of the last-projected-node's features (it's unclear). 
+
+        # Crucially, this is because of the MTSM's property of Independence, which prevents different tiers from influencing each other. 
+
+        # Without Independence, the MTSM could be equivalent to OTSL. 
+
+        # However, it's important to note that this would fix (2) but not fully (1). OTSL and the MTSM can both condition on nodes below them, and this is fine, because those nodes' feature values have already been decided (i.e., do not condition on anything above them). But once you allow for conditioning on different features of your own node, you need to enforce a strict ordering *between* tiers/feature types. 
+
+        # Otherwise, you will have both nodes that condition on features below them, AND nodes that condition on features above them, and this could get quite complex, and doesn't seem like something language would do. 
+\end{minted}
