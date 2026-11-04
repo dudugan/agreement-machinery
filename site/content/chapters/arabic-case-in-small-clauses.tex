@@ -1,3 +1,56 @@
 %% title: Arabic case in small clauses
 %% category: phenomena
 
+Many theories of agreement try to incorporate case; one clear motivation for doing so is that they seem to obey similar locality profiles, and that where agreement is most canonically ``specific DPs influencing functional heads they're around'', case is most canonically ``specific functional heads influencing DPs they're around'' (Baker 2007).
+
+One non-canonical case pattern relatively unexamined in the literature causes problems for standard TSL syntax: the case of the subject and predicate in MSA small clauses.
+
+The first generalization is that when the subject is preceded by a complementizer \gref[a]{msa-sc-case} or embedding lexical verb \gref[b]{msa-sc-case}, it receives accusative case, and otherwise it receives nominative \gref[c]{msa-sc-case}:
+
+\pex \dref{msa-sc-case}
+  \a \begingl \gla ʔaðunnu ʔinna al-timsāħ-\textbf{a} saʕīd-un //
+      \glb 1\textsc{s}-think.\textsc{prs} that \textsc{def}-crocodile-\textbf{\textsc{acc}} happy-\textsc{nom} //
+      \glft `I think the crocodile is happy.' //
+      \endgl
+  \a \begingl \gla ʔaʕtabir al-timsāħ-\textbf{a} saʕīd-an //
+      \glb 1\textsc{sg}-consider.\textsc{prs} \textsc{def}-crocodile-\textbf{\textsc{acc}} happy-\textsc{acc} //
+      \glft `I consider the crocodile happy.' //
+      \endgl
+  \a \begingl \gla al-timsāħ-\textbf{u} saʕīd-un //
+      \glb \textsc{def}-crocodile-\textbf{\textsc{nom}} happy-\textsc{nom} //
+      \endgl
+\xe
+
+The second generalization is that when there is an overt copula, the predicate is accusative. Otherwise, it is accusative when embedded under a lexical verb which takes small clauses \gref[b]{msa-sc-case}, and nominative elsewhere \gref[a, c]{msa-sc-case}. MSA lacks an overt copula for the simple present tense \gref[c]{msa-sc-case}, but requires one in the past \gref[a]{msa-sc-copula} and future \gref[b]{msa-sc-copula}, with modals \gref[c]{msa-sc-copula}, and as a nonfinite copula \gref[d]{msa-sc-copula}:
+
+% TODO: examples
+\pex \dref{msa-sc-copula}
+  \a \ldots
+  \a \ldots
+  \a \ldots
+  \a \ldots
+\xe
+
+The crucial problem for analyses of this phenomenon is that there may be two overlapping case dependencies: one between C and the small-clause subject, and one between the overt copula (one of \{T, Voice, \lv, \rt{}\}) and the small-clause predicate:
+
+\ex \dref{msa-sc-overlap}
+\begin{forest}
+[CP
+  [C \\ \textit{inna}, name=c]
+  [\ldots XP
+    [X, name=x]
+    [\ldots SC
+      [Subject, name=subj]
+      [predicate, name=pred]]]]
+\draw[->] (c) to[out=south, in=south] (subj);
+\draw[->] (x) to[out=south, in=south] (pred);
+\end{forest}
+\xe
+
+The solution to this problem is to have the subject's final case be given by C after it has raised past the intervening case assigner (Alhabi 2017). This is not possible in TSL on its own, which deals only with pre-movement trees, but it is possible with labelling.
+
+The bigger problem for labelling is instead how the accusative case feature originating on C is ever inherited by the subject, which lies lower than it -- in specTP, maybe.
+
+I propose to deal with this in the same way I will deal with concord: with an extension of \textbf{MP-sharing} I'll call \textbf{Phase-Sharing}: when a phase is spelled out, the phase head shares its features with everything in its phase in the following way: any terminal unvalued for a feature gets valued with the phase head's value, if one exists.
+
+In this case, the \textsc{acc} or \textsc{nom} feature of C is shared with the subject DP. Note that unlike in Alhabi (2017), the subject DP's case feature has not been valued yet, because it escaped the VoiceP phase before it was spelled out.\footnote{OK, I feel like this could make bad predictions in cases.}\footnote{Make phase-sharing (the) 2nd pass; it's where syncretism \& other\ldots}

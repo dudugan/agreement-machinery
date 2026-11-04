@@ -1,3 +1,55 @@
 %% title: Arabic partial agreement
 %% category: phenomena
 
+Modern Standard Arabic (MSA) verbs agree with their subjects in person and gender. When subjects precede verbs, they also agree in number, but when subjects follow verbs, this isn't true:
+
+\pex \dref{msa-partial}
+  \a \begingl \gla al-awlaad-u katab-ū fi-l-dafātir //
+      \glb the-boy.\textsc{pl-nom} write.\textsc{pst}-3\textsc{m.pl} in-the-notebook.\textsc{pl} //
+      \endgl
+  \a \begingl \gla katab-a al-awlaad-u fi-l-dafātir //
+      \glb write.\textsc{pst}-3\textsc{ms} the-boy.\textsc{pl-nom} in-the-notebook.\textsc{pl} //
+      \glft `The boys wrote in the notebooks.' //
+      \endgl
+\xe
+
+Most commonly, the difference between these constructions is taken to be the presence or absence of movement to specTP:
+
+\pex \dref{msa-partial-trees}
+  \a \begin{forest}
+[TP
+  [DP \\ \textit{al-awlaad-u}, roof]
+  [T\1
+    [T \\ \textit{katab-ū}, name=t-a]
+    [VoiceP
+      [Voice, name=voice-a]
+      [\vP
+        [\lv, name=v-a]
+        [\rt{KTB}, name=root-a]]]]]
+\draw[->] (root-a) to[out=south, in=south] (v-a);
+\draw[->] (v-a) to[out=south, in=south] (voice-a);
+\draw[->] (voice-a) to[out=south, in=south] (t-a);
+\end{forest}
+  \a \begin{forest}
+[TP
+  [T \\ \textit{kataba}, name=t-b]
+  [VoiceP
+    [DP \\ \textit{al-awlaad-u}, roof]
+    [Voice\1
+      [Voice, name=voice-b]
+      [\vP
+        [\lv, name=v-b]
+        [\rt{KTB}, name=root-b]]]]]
+\draw[->] (root-b) to[out=south, in=south] (v-b);
+\draw[->] (v-b) to[out=south, in=south] (voice-b);
+\draw[->] (voice-b) to[out=south, in=south] (t-b);
+\end{forest}
+\xe
+
+However one analyzes this phenomenon in a labelling theory of agreement, it is clear that at least one functional head in the verbal head complex \{T, Voice, \lv, \rt{}\} must end up with the person and gender features of the subject DP. Little-\lv and \rt{}\footnote{If the lexical root can even host features to begin with.} are too low\footnote{This prompts a question of when the forward pass happens relative to this; if after, then \lv/\rt{} couldn't ever get the DP's features from concord.} to receive its features, and T can receive its features only if Voice has received them; therefore, Voice must receive the subject DP's person and gender features.
+
+Similarly, whichever head in \{T, Voice, \lv, \rt{}\} realizes plural agreement must somehow receive a singular feature in one case, and a plural feature in the other. Little-\lv and \rt{} can never receive the subject's plural feature, because they are too low. The only ways Voice could realize a singular feature in any case would be if it came with [+sg] inherently, or if it was not \textbf{value-seeking} (it had the rule $\tau(\text{+pl}, \text{–}) = \text{–}$), both of which seem questionable and furthermore should not be impacted by the subject's movement to specTP.
+
+Therefore, T must realize the plural feature. It is easy to see how T would get the plural feature in \gref[a]{msa-partial-trees}: it is simply inherited from the subject's generation position to VoiceP, up to TP, and then shared via \textbf{MP-sharing} down to T.
+
+It is less clear why T would ever lack the plural feature. There are two possibilities: either T comes pre-loaded with a [–pl] feature, or in the non-raising cases there is an expletive in specTP, and this expletive has a [–pl] feature (but no person or gender features). In the first case, T would regain a plural feature in \gref[a]{msa-partial-trees} when the subject DP remerges into specTP, shares its features with TP, and those features are shared with T through MP-sharing. In the second case, the expletive's features are shared with TP and then T, and \gref[a]{msa-partial-trees} needs no modifications. Both theories require \textbf{MP-sharing} to mimic \textbf{Spec-Head Agreement} (as opposed to something like mother-sharing, which doesn't allow specifier features to influence head features); they just use the mechanism in opposite constructions.
