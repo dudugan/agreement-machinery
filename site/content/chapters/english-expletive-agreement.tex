@@ -1,3 +1,45 @@
 %% title: English expletive agreement
 %% category: phenomena
 
+When specTP is filled with an expletive, English verbs agree with the copular or unaccusative subject DP below them:
+
+% There seem to be two--
+
+\pex \dref{eng-expl-raven}
+  \a There was a raven.
+  \a \begin{forest}
+[TP
+  [DP \\ \textit{there}, roof]
+  [T\1
+    [T]
+    [\vP
+      [\lv \\ \textit{was}]
+      [DP\feat{–pl} \\ \textit{a raven}, roof]]]]
+\end{forest}
+\xe
+
+\pex \dref{eng-expl-brothers}
+  \a There arrive the brothers.
+  \a \begin{forest}
+[TP
+  [DP \\ \textit{there}, roof]
+  [T\1
+    [T]
+    [\vP
+      [DP\feat{+pl} \\ \textit{the brothers}, roof]
+      [\lv\1
+        [\lv]
+        [\rt{ARRIVE}]]]]]
+\end{forest}
+\xe
+
+These derivations are even simpler. At some point the relevant DP is merged with another node, and because only the DP has a number feature, that feature projects further and further. This proves that the algorithm must be \textbf{value-seeking} for number -- the rules in \Next all apply at some point in \gref{eng-expl-raven} and \gref{eng-expl-brothers}:
+
+\pex \dref{eng-expl-rules}
+  \a $\tau(\text{[–pl]}, \text{[ ]}) = \text{[–pl]}$
+  \a $\tau(\text{[ ]}, \text{[–pl]}) = \text{[–pl]}$
+  \a $\tau(\text{[+pl]}, \text{[ ]}) = \text{[+pl]}$
+  \a $\tau(\text{[ ]}, \text{[+pl]}) = \text{[+pl]}$
+\xe
+
+There is some optionality with expletive agreement -- namely, that contracted \textit{there's} can occur with plural DPs, in certain registers. I assume this is just a separate lexical item.

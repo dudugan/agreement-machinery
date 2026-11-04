@@ -1,3 +1,66 @@
 %% title: English Subject-Verb Agreement
 %% category: phenomena
 
+English verbs agree with their subjects in person and number. I assume like most that `subject' here refers to whatever DP sits in specTP, and that it is T which agrees with the subject:
+
+\pex \dref{eng-sva-lemurs}
+  \a Lemurs like lemonade.
+  \a \begin{forest}
+[TP
+  [T\feat{+pl}]
+  [VoiceP
+    [DP\feat{+pl} \\ \textit{lemurs}, roof]
+    [Voice\1
+      [Voice]
+      [\vP
+        [DP\feat{–pl} \\ \textit{lemonade}, roof]
+        [\lv\1
+          [\lv]
+          [\rt{LIKE}]]]]]]
+\end{forest}
+\xe
+
+In the labelling framework, the analysis is simple. First the lexical root \rt{LIKE} merges with a verbalizer, and the resulting mother node is unvalued for number, because its children are both unvalued for number (this is obligatory if the algorithm is \textbf{conservative}).
+
+Then, the resulting node is merged with the object DP \textit{lemonade}, which yields a mother node which has the [–pl] feature, because \textit{lemonade} has a [–pl] feature:
+
+\pex \dref{eng-sva-vp}
+  \a \begin{forest}
+[\vP\feat{–pl}
+  [DP\feat{–pl} \\ \textit{lemonade}, roof]
+  [\lv\1
+    [\lv]
+    [\rt{LIKE}]]]
+\end{forest}
+  \a $\tau(\text{[–pl]}, \text{[ ]}) = \text{[–pl]}$
+\xe
+
+Next, the resulting \vP merges with Voice, and continues to project its [–pl] feature, because Voice has no number feature intrinsically.
+
+Then, you merge the subject, \textit{lemurs}, which has a [+pl] feature. Here, there must be a rule telling this merge combination to project [+pl] and not [–pl]:
+
+\pex \dref{eng-sva-voicep}
+  \a \begin{forest}
+[VoiceP\feat{+pl}
+  [DP\feat{+pl} \\ \textit{lemurs}, roof]
+  [Voice\1\feat{–pl}
+    [Voice]
+    [\vP\feat{–pl} \\ \textit{like lemonade}, roof]]]
+\end{forest}
+  \a $\tau(\text{[+pl]}, \text{[–pl]}) = \text{[+pl]}$
+\xe
+
+Finally, you merge T, and the mother of T and VoiceP also receives [+pl], as T has no intrinsic number feature.
+
+\pex \dref{eng-sva-tp}
+  \a \begin{forest}
+[TP\feat{+pl}
+  [T]
+  [VoiceP\feat{+pl} \\ \textit{lemurs like lemonade}, roof]]
+\end{forest}
+  \a $\tau(\text{[ ]}, \text{[+pl]}) = \text{[+pl]}$
+\xe
+
+But it is T which needs to receive the [+pl] feature in the end. The simplest way to deal with this is to say that TP and T are really the same object -- we are implicitly using Bare Phrase Structure -- and so the features a head is eventually pronounced with are really just the features of its maximal projection. I'll call this \textbf{maximal-projection sharing}, or \textbf{MP-sharing}, for now.
+
+There are other ways to analyze this phenomenon within the labelling framework, but this is the simplest.
