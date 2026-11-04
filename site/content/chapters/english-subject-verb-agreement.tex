@@ -9,11 +9,11 @@ English verbs agree with their subjects in person and number. I assume like most
 [TP
   [T\feat{+pl}]
   [VoiceP
-    [DP\feat{+pl} \\ \textit{lemurs}, roof]
+    [DP\feat{+pl} [\textit{lemurs}, roof]]
     [Voice\1
       [Voice]
       [\vP
-        [DP\feat{–pl} \\ \textit{lemonade}, roof]
+        [DP\feat{–pl} [\textit{lemonade}, roof]]
         [\lv\1
           [\lv]
           [\rt{LIKE}]]]]]]
@@ -27,7 +27,7 @@ Then, the resulting node is merged with the object DP \textit{lemonade}, which y
 \pex \dref{eng-sva-vp}
   \a \begin{forest}
 [\vP\feat{–pl}
-  [DP\feat{–pl} \\ \textit{lemonade}, roof]
+  [DP\feat{–pl} [\textit{lemonade}, roof]]
   [\lv\1
     [\lv]
     [\rt{LIKE}]]]
@@ -42,10 +42,10 @@ Then, you merge the subject, \textit{lemurs}, which has a [+pl] feature. Here, t
 \pex \dref{eng-sva-voicep}
   \a \begin{forest}
 [VoiceP\feat{+pl}
-  [DP\feat{+pl} \\ \textit{lemurs}, roof]
+  [DP\feat{+pl} [\textit{lemurs}, roof]]
   [Voice\1\feat{–pl}
     [Voice]
-    [\vP\feat{–pl} \\ \textit{like lemonade}, roof]]]
+    [\vP\feat{–pl} [\textit{like lemonade}, roof]]]]
 \end{forest}
   \a $\tau(\text{[+pl]}, \text{[–pl]}) = \text{[+pl]}$
 \xe
@@ -56,7 +56,7 @@ Finally, you merge T, and the mother of T and VoiceP also receives [+pl], as T h
   \a \begin{forest}
 [TP\feat{+pl}
   [T]
-  [VoiceP\feat{+pl} \\ \textit{lemurs like lemonade}, roof]]
+  [VoiceP\feat{+pl} [\textit{lemurs like lemonade}, roof]]]
 \end{forest}
   \a $\tau(\text{[ ]}, \text{[+pl]}) = \text{[+pl]}$
 \xe
