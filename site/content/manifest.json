@@ -32,6 +32,7 @@
     {
       "title": "Initial case studies",
       "chapters": [
+        "chapters/english-subject-verb-agreement.tex",
         "chapters/english-expletive-agreement.tex",
         "chapters/mundari-multiple-agreement.tex"
       ]
