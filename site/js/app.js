@@ -274,7 +274,7 @@ function go(id, to, {push=true}={}){
   document.body.classList.toggle("noside",!META[id]); setMenu(false); setHdr();
   document.body.classList.toggle("nonotes",!document.querySelector(`.page[data-page="${page}"] .note`));
   if(push){ const h="#"+id+(to?"/"+to:""); if(location.hash!==h) history.pushState(null,"",h); }
-  document.title=(META[id]?META[id].title+" · ":id==="checker"?"The Checker · ":id.startsWith("sum:")?strip($("#rd-title").innerHTML)+" · ":"")+"Agreement Machinery";
+  document.title=(META[id]?META[id].title+" · ":id==="checker"?"Checker · ":id.startsWith("sum:")?strip($("#rd-title").innerHTML)+" · ":"")+"Agreement Machinery";
   renderSide(); relayout();
   if(page==="checker") Checker.show();
   if(to){ const el=document.getElementById(to); if(el){ el.scrollIntoView({behavior: same?"smooth":"instant", block:"start"});

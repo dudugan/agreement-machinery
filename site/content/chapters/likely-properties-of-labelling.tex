@@ -362,9 +362,17 @@ def as_data(ph):
             "adjuncts": [as_data(a) for a in ph.adjuncts]}
 
 
+def describe(tau):
+    ranking = " > ".join(" = ".join(block) for block in reversed(tau.blocks))
+    if any(len(block) > 1 for block in tau.blocks):
+        ranking += f"; ties go to the {tau.side}"
+    return ranking
+
+
 def tier_result(trees, tier):
     passing, total, mandated, pairs, blocked = check_tier(trees, tier)
     return {"tier": tier, "passes": bool(passing), "passing": len(passing), "total": total,
+            "functions": [describe(tau) for tau in passing],
             "mandated": [list(m) for m in mandated],
             "blocked": [[h.name, show(h.observed[tier]), [show(v) for v in values]] for h, values in blocked]}
 

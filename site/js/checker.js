@@ -32,7 +32,7 @@ function init(){
   const usage=box.querySelector(".try-usage")?.textContent||"";
   $("#ck-entry").innerHTML=`
     <div class="ck-box">
-      <div class="nf-cap">one tree at a time: press Enter (or “add”) to save it to the batch</div>
+      <p class="ck-how">Add one tree at a time by typing it and then pressing enter/clicking “add to batch”.</p>
       ${usage?`<pre class="try-usage">${esc(usage)}</pre>`:""}
       <textarea class="try-in" id="ck-in" rows="2" spellcheck="false"></textarea>
       <div class="nf-bar"><button class="cb" data-ck="example">reset to example</button><span class="nf-sp"></span>
@@ -42,9 +42,8 @@ function init(){
     <h3 class="ck-h">The batch <span class="ck-n" id="ck-n"></span><button class="cb" data-ck="clear">clear all</button></h3>
     <ol class="ck-list" id="ck-list"></ol>
     <div class="ck-result" id="ck-result" hidden></div>
-    <details class="ck-trees" id="ck-trees"><summary>The trees as diagrams, with the rules each one mandates on its own</summary><div id="ck-cards"></div></details>`;
-  $("#ck-code").innerHTML=`<p class="ck-note">This is the Python from the chapter. The checker calls <code>check_batch()</code> with the trees in the batch.</p>
-    <div class="codeblock" data-lang="python"><pre class="code-src">${esc(code)}</pre></div>`;
+    <details class="ck-trees" id="ck-trees"><summary>Trees</summary><div id="ck-cards"></div></details>`;
+  $("#ck-code").innerHTML=`<div class="codeblock" data-lang="python"><pre class="code-src">${esc(code)}</pre></div>`;
   Code.renderAll($("#ck-code"));
   $("#ck-in").value=example;
   trees=load().map(text=>({text, data:null}));
@@ -84,7 +83,7 @@ function add(){ return guarded(async()=>{
   const r=await call([text]);
   trees.push({text, data:r.trees[0]}); save();
   inp.value=""; inp.focus();
-  status(`<span class="co-status">added as tree ${trees.length}. Type the next one, or check the batch.</span>`);
+  status(`<span class="co-status">added as tree ${trees.length}.</span>`);
   clearResult(); drawList();
 }); }
 function run(){ return guarded(async()=>{
@@ -101,13 +100,14 @@ function run(){ return guarded(async()=>{
 const rule=([p,w,m])=>`τ(partial=${esc(p)}, whole=${esc(w)}) = ${esc(m)}`;
 function tierLine(t, alone){
   if(!t.passes){
-    let s=`<b>${esc(t.tier)}</b>: <span class="ck-bad">fails</span> (none of ${t.total} lawful transition functions derive ${alone?"it":"every tree"})`;
+    let s=`<b>${esc(t.tier)}</b>: <span class="ck-bad">fails</span>`;
     t.blocked.forEach(([h,v,vs])=>{ s+=`<div class="ck-sub">${esc(h)} never surfaces as ${esc(v)}; it can only surface as ${vs.map(esc).join(", ")}</div>`; });
     return s;
   }
-  let s=`<b>${esc(t.tier)}</b>: <span class="ck-ok">passes</span> (${t.passing} of ${t.total} lawful transition functions derive ${alone?"it":"every tree"})`;
+  let s=`<b>${esc(t.tier)}</b>: <span class="ck-ok">passes</span>`;
   if(t.mandated.length) s+=t.mandated.map(m=>`<div class="ck-sub">mandates ${rule(m)}</div>`).join("");
   else s+=`<div class="ck-sub ck-muted">no transition rules are mandated</div>`;
+  s+=`<div class="ck-fns"><div class="ck-fh">possible lawful transition functions</div>${t.functions.map(f=>`<div class="ck-sub">${esc(f)}</div>`).join("")}</div>`;
   return s;
 }
 function drawList(){
@@ -131,7 +131,7 @@ function clearResult(){ const r=$("#ck-result"); r.hidden=true; r.innerHTML=""; 
 function drawResult(batch){
   const ok=batch.every(t=>t.passes), n=trees.length;
   let html=`<div class="ck-verdict ${ok?"ck-ok":"ck-bad"}">${ok?"PASSES":"FAILS"}</div>
-    <p class="ck-says">${ok?`One consistent labelling algorithm derives all ${n} tree${n>1?"s":""}.`:`No single consistent labelling algorithm derives all ${n} trees.`}</p>`;
+    <p class="ck-says">${ok?(n>1?`One consistent labelling algorithm derives all ${n} trees.`:`A consistent labelling algorithm derives this tree.`):(n>1?`No single consistent labelling algorithm derives all ${n} trees.`:`No consistent labelling algorithm derives this tree.`)}</p>`;
   html+=batch.length?batch.map(t=>`<div class="ck-tier">${tierLine(t,false)}${t.passes?"":conflicts(t.tier)}</div>`).join(""):`<p class="ck-muted">no features on any head, so there is nothing to check.</p>`;
   const r=$("#ck-result"); r.innerHTML=html; r.hidden=false;
 }

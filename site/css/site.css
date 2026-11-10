@@ -581,3 +581,6 @@ img.graphic{display:block;max-width:100%;height:auto;margin:6px auto}
 .ck-card .diagram{margin:0 0 8px}
 .ck-f{font-family:var(--mono);font-size:10.5px;color:var(--accent)}
 .ck-note{font-size:16px;margin:0 0 12px}
+.ck-how{margin:0 0 8px;font-size:16px}
+.ck-fns{margin:6px 0 0}
+.ck-fh{margin-left:18px;font-variant:small-caps;letter-spacing:.06em;font-size:14px;color:var(--muted)}
