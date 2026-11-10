@@ -289,15 +289,17 @@ def derive(tree, tier, tau):
     return {ph.head: head[ph] for ph in tree.phrases()}
 
 # collect all consistent grammars, find mandated rules, 
-def check_tier(tree, tier):
-    heads = [ph.head for ph in tree.phrases()]
+def check_tier(trees, tier):
+    heads = [ph.head for tree in trees for ph in tree.phrases()]
     values = {h.lexical.get(tier) for h in heads} | {h.observed[tier] for h in heads if tier in h.observed}
     values.discard(None)
     targets = [h for h in heads if tier in h.observed]
     passing, possible, total = [], {id(h): set() for h in targets}, 0
     for tau in grammars(values):
         total += 1
-        surface = derive(tree, tier, tau)
+        surface = {}
+        for tree in trees:
+            surface.update(derive(tree, tier, tau))
         for h in targets:
             possible[id(h)].add(surface[h])
         if all(surface[h] == h.observed[tier] for h in targets):
@@ -321,7 +323,7 @@ def report(text):
         return "No features on any head, so there is nothing to check."
     lines, ok = [], True
     for tier in tiers:
-        passing, total, mandated, pairs, blocked = check_tier(tree, tier)
+        passing, total, mandated, pairs, blocked = check_tier([tree], tier)
         if passing:
             lines.append(f"{tier}: passes ({len(passing)} of {total} lawful transition functions derive it)")
             for p, w, m in mandated:
@@ -338,6 +340,49 @@ def report(text):
                 lines.append("  each observation is derivable on its own, but not all of them together")
     lines.insert(0, "PASSES" if ok else "FAILS")
     return "\n".join(lines)
+
+
+def features(h):
+    out = []
+    for tier, value in h.lexical.items():
+        if value is not None:
+            out.append(f"{tier}={value}")
+        elif tier in h.observed:
+            out.append(f"{tier}=?{h.observed[tier] or '-'}")
+        else:
+            out.append(f"{tier}=?")
+    return out
+
+
+def as_data(ph):
+    return {"name": ph.name, "phase": ph.phase,
+            "head": {"name": ph.head.name, "features": features(ph.head)},
+            "complement": as_data(ph.complement) if ph.complement else None,
+            "specifiers": [as_data(s) for s in ph.specifiers],
+            "adjuncts": [as_data(a) for a in ph.adjuncts]}
+
+
+def tier_result(trees, tier):
+    passing, total, mandated, pairs, blocked = check_tier(trees, tier)
+    return {"tier": tier, "passes": bool(passing), "passing": len(passing), "total": total,
+            "mandated": [list(m) for m in mandated],
+            "blocked": [[h.name, show(h.observed[tier]), [show(v) for v in values]] for h, values in blocked]}
+
+
+def tiers_of(trees):
+    return sorted({t for tree in trees for ph in tree.phrases() for t in ph.head.lexical})
+
+
+def check_batch(texts):
+    trees = []
+    for i, text in enumerate(texts, 1):
+        try:
+            trees.append(parse(text))
+        except ValueError as error:
+            raise ValueError(f"tree {i}: {error}" if len(texts) > 1 else str(error))
+    return {"trees": [{"tree": as_data(tree), "tiers": [tier_result([tree], t) for t in tiers_of([tree])]}
+                      for tree in trees],
+            "batch": [tier_result(trees, t) for t in tiers_of(trees)]}
 
 
 def main():

@@ -258,5 +258,19 @@ function renderAll(root){
   root.querySelectorAll(".nodeform").forEach(f=>{ if(!f._spec) renderForm(f); });
   root.querySelectorAll(".codeblock").forEach(el=>{ if(!blocks.has(el)) render(el); });
 }
-window.Code={ renderAll, highlightLines };
+// run `code` in a fresh Python namespace with `vars` set, and return its last expression as plain JS data
+async function evalPy(code, vars={}, status=()=>{}){
+  const py=await loadPy(status);
+  const ns=py.globals.get("dict")();
+  for(const [k,v] of Object.entries(vars)){ const p=py.toPy(v); ns.set(k,p); p.destroy&&p.destroy(); }
+  try{
+    const r=await py.runPythonAsync(code, {globals:ns});
+    const js=r&&r.toJs?r.toJs({dict_converter:Object.fromEntries}):r;
+    r&&r.destroy&&r.destroy();
+    return js;
+  } finally { ns.destroy(); }
+}
+// the source of a code block, whether or not it has been rendered yet
+const source=el=>blocks.has(el)?blocks.get(el).code:(el.querySelector("pre.code-src")?.textContent||"");
+window.Code={ renderAll, highlightLines, evalPy, source };
 })();

@@ -269,13 +269,14 @@ function go(id, to, {push=true}={}){
   const same=id===current;
   current=id;
   $$(".page").forEach(p=>p.classList.toggle("on",p.dataset.page===page));
-  const tab=META[id]?"machinery":id.startsWith("ph:")?"encyclopedia":id.startsWith("sum:")?"summaries":id;
+  const tab=META[id]||id==="checker"?"machinery":id.startsWith("ph:")?"encyclopedia":id.startsWith("sum:")?"summaries":id;
   $$("nav.tabs a").forEach(a=>a.classList.toggle("on",a.dataset.tab===tab));
   document.body.classList.toggle("noside",!META[id]); setMenu(false); setHdr();
   document.body.classList.toggle("nonotes",!document.querySelector(`.page[data-page="${page}"] .note`));
   if(push){ const h="#"+id+(to?"/"+to:""); if(location.hash!==h) history.pushState(null,"",h); }
-  document.title=(META[id]?META[id].title+" · ":id.startsWith("sum:")?strip($("#rd-title").innerHTML)+" · ":"")+"Agreement Machinery";
+  document.title=(META[id]?META[id].title+" · ":id==="checker"?"The Checker · ":id.startsWith("sum:")?strip($("#rd-title").innerHTML)+" · ":"")+"Agreement Machinery";
   renderSide(); relayout();
+  if(page==="checker") Checker.show();
   if(to){ const el=document.getElementById(to); if(el){ el.scrollIntoView({behavior: same?"smooth":"instant", block:"start"});
       if(el.matches(".ex,.sub,li")){ el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); } } }
   else if(!same) window.scrollTo({top:0,behavior:"instant"});
@@ -510,6 +511,7 @@ async function buildBook(){
 await document.fonts.ready;
 Diagrams.renderAll(st.diagrams, pages, m=>st.warnings.push(m));
 Code.renderAll(pages);
+Checker.init();
 $("#loading").remove();
 if(new URLSearchParams(location.search).has("print")) buildBook(); // the "Read as PDF" view
 else {
