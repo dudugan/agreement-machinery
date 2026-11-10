@@ -44,6 +44,13 @@ const PHEN=[];
   const doc=LaTeX.parseDocument("ph-"+id, src, st, 0);
   PHEN.push({id, doc});
 });
+// the Encyclopedia: one summary per reading in the bibliography, in content/summaries/<key>.tex
+const SUMDIR=manifest.summaries||"summaries/";
+const bibKeys=Object.keys(bib);
+const sumSrc=await Promise.all(bibKeys.map(k=>text(BASE+SUMDIR+k+".tex").catch(()=>null)));
+const SUM={};
+bibKeys.forEach((k,i)=>{ const doc=LaTeX.parseDocument("sum-"+k, sumSrc[i]??"", st, 0);
+  SUM[k]={key:k, doc, file:SUMDIR+k+".tex", missing:sumSrc[i]==null}; });
 LaTeX.resolve(st, bib, id=>META[id]?{n:META[id].n, title:META[id].title}:{n:null,title:""});
 const conv=s=>LaTeX.convert(s||"", st, {}, "inline");
 PHEN.forEach(p=>{ const m=p.doc.meta;
@@ -54,6 +61,8 @@ PHEN.forEach(p=>{ const m=p.doc.meta;
   p.discussed=(m.discussed||"").split(",").map(s=>s.trim()).filter(Boolean);
 });
 const docOf=id=>META[id]?.doc;
+Object.values(SUM).forEach(r=>{ r.empty=!strip(r.doc.html)&&!strip(r.doc.abstract); });
+const READ=Object.values(bib).sort((a,b)=>a.sortKey.localeCompare(b.sortKey)).map(e=>SUM[e.key]);
 
 /* ---------- build chapter pages ---------- */
 const pages=$("#pages");
@@ -96,11 +105,40 @@ chapters.forEach((c,i)=>{
     const where=[...(citedIn[e.key]||new Map()).values()].map(({d,sec})=>{
       if(d.id.startsWith("ph-")){ const p=PHEN.find(x=>"ph-"+x.id===d.id); return `<a data-go="ph:${p.id}">${strip(p.name)}</a>`; }
       const M=META[d.id]; return `<a data-go="${d.id}"${sec?` data-to="${sec.id}"`:""}>§${sec&&sec.num?sec.num:M.n}</a>`; }).join(" ");
-    html+=`<li id="bib-${e.key}">${e.html}${where?`<span class="by">cited in ${where}</span>`:`<span class="by">not cited yet</span>`}</li>`;
+    const sum=SUM[e.key].empty?`<a class="nosum" data-go="sum:${e.key}">no summary yet</a>`:`<a data-go="sum:${e.key}">summary</a>`;
+    html+=`<li id="bib-${e.key}">${e.html}<span class="by">${where?`cited in ${where}`:"not cited yet"} · ${sum}</span></li>`;
   });
   $("#bib-list").innerHTML=html;
-  $("#bib-meta").textContent=`${entries.length} works`;
+  $("#bib-meta").textContent=`${entries.length} readings`;
 })();
+
+/* ---------- the Encyclopedia: an index of the readings, and a page for each summary ---------- */
+(function buildReadings(){
+  let html="", letter="";
+  READ.forEach(r=>{ const e=bib[r.key];
+    const L=strip(e.short)[0]?.toUpperCase()||"?";
+    if(L!==letter){ letter=L; html+=`<li class="letter">${L}</li>`; }
+    let gist=r.empty?"":strip(r.doc.abstract||r.doc.html);
+    if(gist.length>240) gist=gist.slice(0,240).replace(/\s+\S*$/,"")+"…";
+    html+=`<li><a data-go="sum:${r.key}"><span class="who">${e.short} ${e.year}</span><span class="what">${e.title||""}</span>`+
+      `${r.empty?`<span class="gist none">no summary yet</span>`:`<span class="gist">${LaTeX.esc(gist)}</span>`}</a></li>`;
+  });
+  $("#read-list").innerHTML=html;
+  $("#read-meta").textContent=`${READ.filter(r=>!r.empty).length} of ${READ.length} readings summarized`;
+})();
+function renderReading(key){
+  const i=READ.findIndex(r=>r.key===key), r=READ[i]; if(!r) return false;
+  const e=bib[key];
+  $("#rd-title").innerHTML=e.title||e.short;
+  $("#rd-meta").textContent=`${strip(e.short)} ${strip(e.year)} · reading ${pad(i+1)} of ${pad(READ.length)}`;
+  $("#rd-cite").innerHTML=`${e.html} <a class="xref" data-bib="${key}">in The Bibliography →</a>`;
+  const ab=$("#rd-abstract"); ab.hidden=!r.doc.abstract; ab.innerHTML=r.doc.abstract?`<span class="lbl">Tl;dr</span>${r.doc.abstract}`:"";
+  $("#rd-body").innerHTML=r.empty?`<div class="placeholder">No summary yet. Write one in <code>content/${r.file}</code>.</div>`:r.doc.html;
+  const prev=READ[i-1], next=READ[i+1], nm=x=>`${bib[x.key].short} ${bib[x.key].year}`;
+  $("#rd-nav").innerHTML=(prev?`<a data-go="sum:${prev.key}">← <i>${nm(prev)}</i></a>`:"<span></span>")+(next?`<a data-go="sum:${next.key}"><i>${nm(next)}</i> →</a>`:"<span></span>");
+  Diagrams.renderAll(st.diagrams, $("#rd-body")); Code.renderAll($("#rd-body"));
+  return true;
+}
 
 /* ---------- sidebar ---------- */
 const PARTS=manifest.parts.map(p=>p.title);
@@ -219,7 +257,8 @@ function renderPhen(pid){
 /* ---------- navigation (with #hash routing so links and reloads work) ---------- */
 function go(id, to, {push=true}={}){
   let page=id;
-  if(id.startsWith("ph:")){ page="phen"; if(!renderPhen(id.slice(3))) { id="encyclopedia"; page=id; } }
+  if(id.startsWith("sum:")){ page="reading"; if(!renderReading(id.slice(4))) { id="summaries"; page=id; } }
+  else if(id.startsWith("ph:")){ page="phen"; if(!renderPhen(id.slice(3))) { id="encyclopedia"; page=id; } }
   else if(META[id] && META[id].stub){
     page="stub"; const m=META[id];
     $("#stub-crumb").textContent=`${m.cat?m.cat+" · ":""}Section ${m.n}`;
@@ -230,12 +269,12 @@ function go(id, to, {push=true}={}){
   const same=id===current;
   current=id;
   $$(".page").forEach(p=>p.classList.toggle("on",p.dataset.page===page));
-  const tab=META[id]?"machinery":id.startsWith("ph:")?"encyclopedia":id;
+  const tab=META[id]?"machinery":id.startsWith("ph:")?"encyclopedia":id.startsWith("sum:")?"summaries":id;
   $$("nav.tabs a").forEach(a=>a.classList.toggle("on",a.dataset.tab===tab));
   document.body.classList.toggle("noside",!META[id]); setMenu(false); setHdr();
   document.body.classList.toggle("nonotes",!document.querySelector(`.page[data-page="${page}"] .note`));
   if(push){ const h="#"+id+(to?"/"+to:""); if(location.hash!==h) history.pushState(null,"",h); }
-  document.title=(META[id]?META[id].title+" · ":"")+"Agreement Machinery";
+  document.title=(META[id]?META[id].title+" · ":id.startsWith("sum:")?strip($("#rd-title").innerHTML)+" · ":"")+"Agreement Machinery";
   renderSide(); relayout();
   if(to){ const el=document.getElementById(to); if(el){ el.scrollIntoView({behavior: same?"smooth":"instant", block:"start"});
       if(el.matches(".ex,.sub,li")){ el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); } } }
@@ -248,7 +287,7 @@ document.addEventListener("click",e=>{
   e.preventDefault(); hidePop();
   if(a.dataset.top){ window.scrollTo({top:0,behavior:"smooth"}); return; }
   if(a.dataset.bib) return go("bibliography","bib-"+a.dataset.bib);
-  if(a.dataset.ex){ const pg=pageOfEl(a.dataset.ex); if(pg) return go(pg==="phen"?current:pg, a.dataset.ex); return; }
+  if(a.dataset.ex){ const pg=pageOfEl(a.dataset.ex); if(pg) return go(pg==="phen"||pg==="reading"?current:pg, a.dataset.ex); return; }
   go(a.dataset.go,a.dataset.to);
 });
 window.addEventListener("popstate",()=>routeFromHash(false));
@@ -372,7 +411,7 @@ document.addEventListener("mouseover",e=>{
     } else if(a.dataset.bib){
       const li=document.getElementById("bib-"+a.dataset.bib); if(!li) return;
       const c=li.cloneNode(true); c.querySelector(".by")?.remove();
-      showPop(a,`<div class="pk">Bibliography</div><div>${c.innerHTML}</div>`);
+      showPop(a,`<div class="pk">The Bibliography</div><div>${c.innerHTML}</div>`);
     } else if(a.dataset.go && META[a.dataset.go]){
       const m=META[a.dataset.go]; let sec="";
       if(a.dataset.to){ const h=document.getElementById(a.dataset.to); if(h) sec=` · §${h.querySelector(".num")?.textContent||""}`; }
@@ -435,7 +474,7 @@ async function buildBook(){
   book.innerHTML=`<div class="bk-bar"><a href="./">← back to the site</a><span>This is the printable version of every drafted chapter.</span><button type="button" onclick="window.print()">Print or save as PDF</button></div>
     <section class="bk-title"><p class="kicker">An Independent Study and Thesis Project</p><h1>Agreement Machinery</h1>
       <p class="bk-date">${date}</p><p class="bk-url">dudugan.github.io/agreement-machinery</p></section>
-    <nav class="bk-toc"><h2>Contents</h2>${toc}<ol><li><a href="#bk-bib"><span class="n"></span>Bibliography</a></li></ol></nav>`;
+    <nav class="bk-toc"><h2>Contents</h2>${toc}<ol><li><a href="#bk-bib"><span class="n"></span>The Bibliography</a></li></ol></nav>`;
   for(const c of live){
     const sec=document.querySelector(`.page[data-page="${c.id}"]`); if(!sec) continue;
     const art=sec.querySelector("article"), d=META[c.id].doc;
@@ -449,7 +488,7 @@ async function buildBook(){
     book.appendChild(ch);
   }
   const bib=document.createElement("section"); bib.className="bk-chapter"; bib.id="bk-bib";
-  bib.innerHTML=`<article><h1 class="title">Bibliography</h1><ul class="bib">${$("#bib-list").innerHTML}</ul></article>`;
+  bib.innerHTML=`<article><h1 class="title">The Bibliography</h1><ul class="bib">${$("#bib-list").innerHTML}</ul></article>`;
   bib.querySelectorAll(".by").forEach(x=>x.remove());
   book.appendChild(bib);
   // links point inside the book (and so work inside the PDF)

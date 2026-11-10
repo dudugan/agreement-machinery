@@ -1,6 +1,7 @@
 {
   "macros": "macros.tex",
   "bibliography": "refs.bib",
+  "summaries": "summaries/",
   "categories": [
     "definitions",
     "properties",

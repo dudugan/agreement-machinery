@@ -1,0 +1,78 @@
+% Summary of verbilhunter2026: Omnivorous agreement, like {Uyghur} backness harmony, is a challenge for tier-based strict locality
+
+\begin{abstract}
+\textbf{Background:} Mayer and Major 2018 found that Uyghur backness harmony was not Tier-based Strictly Local, but instead Output-TSL.
+
+\textbf{Claim:} Omnivorous Agreement in Mundari shows a similar pattern, and is also not TSL, but instead OTSL.
+
+\textbf{Thrust:} Harmony/agreement patterns must be OTSL and not TSL if you have a hierarchy of more than two levels.
+
+no rock paper scissors
+\end{abstract}
+
+\section*{Uyghur backness harmony}
+
+\begin{enumerate}
+  \item If there's a harmonizing vowel in the stem, the suffix should match the last one.
+  \item Elif there's a harmonizing consonant in the stem, the suffix should match the last one.
+  \item Else, the suffix should be a default value.
+\end{enumerate}
+
+This requires the rule, going left-to-right:
+
+\begin{itemize}
+  \item Project a harmonizing consonant only if you haven't projected a harmonizing vowel yet.
+\end{itemize}
+
+\section*{Mundari omnivorous agreement}
+
+\begin{enumerate}
+  \item If there's a first person DP as direct or indirect object, the suffix should be \textit{-iɲ}.
+  \item Elif there's a second person DP as direct or indirect object, the suffix should be \textit{-m}.
+  \item Else, the suffix should be \textit{-i}.
+\end{enumerate}
+
+This requires the rule, going bottom-to-top:
+
+\begin{itemize}
+  \item Project a second person DP only if you haven't projected a first person DP yet.
+\end{itemize}
+
+\section*{Definition of O-TSL}
+
+\begin{quote}
+A (\textit{j}, \textit{k})-OTSL grammar is like a \textit{k}-TSL grammar, except that the tier projection function can take into account the most recent \textit{j-1} symbols already projected to the tier when deciding whether to project a particular surface symbol.
+
+\end{quote}
+
+So,
+
+A (\textit{j}, \textit{k})-OTSL language L can be defined as (Sigma, T, S, \textit{k}) where:
+
+\begin{itemize}
+  \item Sigma is a finite alphabet
+  \item T is a set of tuples (sigma, tau), where sigma is in Sigma, and tau is in Union(start-symbol, Sigma) and is of length \textit{j-1}.
+  \item S is a set of forbidden factors of length \textit{k}, from Sigma*
+  \item Progressing from the bottom of the c-string upwards, project symbol sigma onto the tier iff there is a member of T (sigma, tau) and the tier constructed thus far ends in tau.
+  \item L contains all strings in Sigma* whose tiers don't contain any factor in S
+\end{itemize}
+
+\section*{Other languages with three-level agreement hierarchies}
+
+\begin{itemize}
+  \item Hayu
+  \item Onondaga
+  \item Mundari (also has a Sg > Pl > Du hierarchy)
+\end{itemize}
+
+\section*{Theoretical Thrust}
+
+Kind of backs up Graf (2022)'s Cognitive Parallelism Hypothesis:
+
+\begin{itemize}
+  \item Distinct language models (e.g. phonology, syntax) have the same formal complexity.
+\end{itemize}
+
+\section*{Thoughts about this as an MTSM}
+
+This actually fits very well as an MTSM. Progressing bottom-up, the MTSM simply needs to read the current stored value for a given tier, and then decide whether to replace it with the current head value or not, depending on some listed hierarchy of features.

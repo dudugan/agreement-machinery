@@ -191,6 +191,11 @@ document.addEventListener("click",async e=>{
   const fold=e.target.closest(".codeblock .cl.foldable .gut, .codeblock .ell");
   if(fold){ const el=fold.closest(".codeblock"), st=blocks.get(el), i=+fold.closest(".cl").dataset.i;
     st.folded.has(i)?st.folded.delete(i):st.folded.add(i); applyFolds(el); return; }
+  const tr=e.target.closest(".tryit [data-try]");
+  if(tr){ const box=tr.closest(".tryit");
+    if(tr.dataset.try==="example") box.querySelector(".try-in").value=box.dataset.example||"";
+    else runTry(box);
+    return; }
   const nf=e.target.closest(".nodeform [data-nf]");
   if(nf){
     const form=nf.closest(".nodeform"), row=nf.closest(".nf-row");
@@ -220,7 +225,36 @@ document.addEventListener("click",async e=>{
   }
 });
 
+/* ---------- a "try it" box: the reader's text goes to one fixed function of the block above, as a string ---------- */
+function renderTry(box){
+  box._ready=true;
+  const usage=box.querySelector(".try-usage")?.textContent||"";
+  let drv=box.nextElementSibling; while(drv && !drv.classList.contains("codeblock")) drv=drv.nextElementSibling;
+  box._driver=drv&&drv.dataset.lang==="python"?drv:null;
+  box.innerHTML=`<div class="nf-cap">try it: the input goes to <code>${esc(box.dataset.fn)}()</code> in the code below</div>
+    ${usage?`<pre class="try-usage">${esc(usage)}</pre>`:""}
+    <textarea class="try-in" rows="2" spellcheck="false"></textarea>
+    <div class="nf-bar"><button class="cb" data-try="example">reset to example</button><span class="nf-sp"></span><button class="cb run" data-try="run">▶ check</button></div>
+    <div class="code-out" hidden></div>`;
+  box.querySelector(".try-in").value=box.dataset.example||"";
+}
+async function runTry(box){
+  const btn=box.querySelector('[data-try="run"]'), input=box.querySelector(".try-in").value;
+  btn.disabled=true;
+  const out=box.querySelector(":scope > .code-out");
+  if(!box._driver){ out.hidden=false; out.className="code-out err"; out.innerHTML="<pre>there is no Python block after this box</pre>"; btn.disabled=false; return; }
+  const fn=box.dataset.fn;
+  const code=blocks.get(box._driver).code+`\ntry:\n    _tryit_result = ${fn}(_tryit_input)\nexcept ValueError as _tryit_error:\n    _tryit_result = "error: " + str(_tryit_error)\n_tryit_result`;
+  await runOn(box._driver, code, out, (py,ns)=>{ ns.set("_tryit_input", input); });
+  btn.disabled=false;
+}
+document.addEventListener("keydown",e=>{
+  const t=e.target.closest(".tryit .try-in"); if(!t || e.key!=="Enter" || e.shiftKey) return;
+  e.preventDefault(); runTry(t.closest(".tryit"));
+});
+
 function renderAll(root){
+  root.querySelectorAll(".tryit").forEach(b=>{ if(!b._ready) renderTry(b); });
   root.querySelectorAll(".nodeform").forEach(f=>{ if(!f._spec) renderForm(f); });
   root.querySelectorAll(".codeblock").forEach(el=>{ if(!blocks.has(el)) render(el); });
 }

@@ -28,6 +28,14 @@ As an initial hypothesis to be modified, I propose that the labelling algorithm 
 
     \item \textbf{Value-seeking.} If at least one readable daughter is valued for a feature, its mother may not be unvalued for that feature. (Therefore, the LA must be surjective.)
 
+    \item \textbf{Consistently acommutative.}
+
+    \item \textbf{Superconsistently acommutative.}
+
+    \item \textbf{Whole-seeking.}
+
+    \item \textbf{Partial-seeking.}
+
     \item \textbf{Bare phrase structure.} Maximal projections and minimal projections are underlyingly the same object. Therefore, features that the maximal projection inherits are also inherited by the minimal projection.\footnote{Maybe this is eclipsed by mother-sharing.}
 
     % \item \textbf{Whole-writing.} After the features of a mother node are calculated, an algorithm runs which potentially donates some of them to its whole daughter (specifier or complement). 
@@ -54,113 +62,302 @@ As an initial hypothesis to be modified, I propose that the labelling algorithm 
 
 \end{enumerate}
 
+\begin{tryit}{report}{[CP* C [TP T(number=?pl) [vP* [DP D(number=pl)] v [VP V [DP D(number=sg) [NP N +[AP A(number=?sg)]]]]]]]}
+Type a tree into the box below in the following format. If the tree passes, that means it can be represented by a consistent labelling algorithm with the properties outlined above, in which case the mandated rules of the labelling algorithm are outputted. 
+
+  [XP ...]          a phrase; write XP* if it is a phase
+  spec X compl      any number of specifiers, then the head, then at most one complement
+  +[AP ...]         an adjunct
+  X(tier=value)     a head with a lexical/inherent feature value
+  X(tier=?)         a head unvalued for that tier
+  X(tier=?value)    unvalued, and observed to surface with a specific value
+  X(tier=?-)        unvalued, and observed to stay unvalued
+\end{tryit}
+
 \begin{minted}{python}
-### MTSM implementation in Python
+import itertools
+import re
+import sys
 
-tier_list = ['person', 'number', 'gender'] 
 
-# A syntactic node. 
-class snode:
-    def __init__(self, left=None, right=None, mother=None):
-        self.vals = {} # list of tier values
-        for tier in tier_list:
-            self.vals[tier] = None
-        self.left = left # left daughter
-        self.right = right # right daughter
-        self.mother = mother # mother
-    def __repr__(self):
-        return f"snode(vals={self.vals!r})"
+# define the basic data structures
+class Head:
+    def __init__(self, name, lexical, observed):
+        self.name = name
+        self.lexical = lexical
+        self.observed = observed
 
-# A transducer which gives values to non-terminals, given a transition function. 
-def run_mtsm(input_stream, tau):
-    output_stream = []
-    right = None; # assumes the bottommost right node is a lexical root unvalued for any features.
-    for left in reversed(input_stream):
-        mother = tau(left, right) # tau is the transition function
-        output_stream.insert(0, right)
-        output_stream.insert(0, left)
-        right = mother
-    output_stream.insert(0, right)
-    return output_stream
+class Phrase:
+    def __init__(self, name, phase, head, complement, specifiers, adjuncts):
+        self.name = name
+        self.phase = phase
+        self.head = head
+        self.complement = complement
+        self.specifiers = specifiers
+        self.adjuncts = adjuncts
 
-    # Input: list of left nodes from top to bottom
-    # Output: list of nodes in "right[left right[left right[...]]]" order (all right daughters are even-indexed). 
+    # return all daughters in a dependency tree
+    def daughters(self):
+        return [d for d in (self.complement, *self.specifiers, *self.adjuncts) if d is not None]
 
-    # Important: treats specifiers as terminals, and assumes this process has already run on them. 
-    # Important: assumes the strict LCA, and operates over constituency trees, not dependency trees.
+    # recursively yield all subphrases, including self
+    def phrases(self):
+        yield self
+        for d in self.daughters():
+            yield from d.phrases()
 
-# A helper to retrieve the value of a given tier on a given node. 
-def val(node, tier):
-    return None if node is None else node.vals[tier]
+# parse the inputted tree string into objects
+TOKEN = re.compile(r"\[|\]|\+|[^\s\[\]()+]+(?:\([^)]*\))?")
 
-# A helper to check that a tree is well-formed. 
-def validate_tree(tree):
-    if len(tree) % 2 == 0: raise ValueError('tree has even number of nodes')
-    if any(val(tree[-1], t) is not None for t in tier_list):
-        raise ValueError('bottom right node is not empty')
+# parse a head object into a head data structure
+def parse_head(token):
+    m = re.fullmatch(r"([^()]+)(?:\((.*)\))?", token)
+    if not m:
+        raise ValueError(f"cannot read head {token!r}")
+    lexical, observed = {}, {}
+    for feature in filter(None, (f.strip() for f in (m.group(2) or "").split(","))):
+        if "=" not in feature:
+            raise ValueError(f"feature {feature!r} in {token!r} needs the form tier=value")
+        tier, value = (s.strip() for s in feature.split("=", 1))
+        if not value.startswith("?"):
+            lexical[tier] = value
+        elif value == "?":
+            lexical[tier] = None
+        else:
+            lexical[tier] = None
+            observed[tier] = None if value == "?-" else value[1:]
+    return Head(m.group(1), lexical, observed)
 
-# An evaluator which checks if a given tree could have been created with an MTSM or not, given a specific tau. 
-def eval_tauful(tree, tau):
-    validate_tree(tree)
-    for i in range(0, len(tree)-1, 2):
-        mother, left, right = tree[i], tree[i+1], tree[i+2]
-        if any(tau(left, right).vals[t] != val(mother, t) for t in tier_list):
-            return False
+# parse the whole string of objects into a tree
+def parse(text):
+    tokens = TOKEN.findall(text)
+    pos = 0
+
+    def peek():
+        if pos >= len(tokens):
+            raise ValueError("the tree ends too early: a ] is missing")
+        return tokens[pos]
+
+    def phrase():
+        nonlocal pos
+        if peek() != "[":
+            raise ValueError(f"expected [ but found {peek()!r}")
+        pos += 1
+        name = peek()
+        if name in "[]+":
+            raise ValueError("every phrase needs a name, as in [DP ...]")
+        pos += 1
+        before, head, after, adjuncts = [], None, [], []
+        while peek() != "]":
+            if peek() == "+":
+                pos += 1
+                adjuncts.append(phrase())
+            elif peek() == "[":
+                (after if head else before).append(phrase())
+            else:
+                if head:
+                    raise ValueError(f"{name} has two heads: {head.name} and {peek()}")
+                head = parse_head(peek())
+                pos += 1
+        pos += 1
+        if head is None:
+            raise ValueError(f"{name} has no head")
+        if len(after) > 1:
+            raise ValueError(f"{name} has more than one complement")
+        return Phrase(name.rstrip("*"), name.endswith("*"), head, after[0] if after else None,
+                      list(reversed(before)), adjuncts)
+
+    tree = phrase()
+    if pos != len(tokens):
+        raise ValueError(f"unexpected {tokens[pos]!r} after the end of the tree")
+    return tree
+
+# data structure for a language's transition function
+# this is important! with the above properties, a transition
+# function can be exhaustively described by (1) a ranking
+# of values on that tier, including ties, and (2) a ranking
+# of partial (head/bar) vs whole (complement/specifier).
+# When two values are tied, they get evaluated according to
+# the partial/whole ranking. 
+# The property of "Consistently acommutative" describes a grammar
+# in which the partial/whole ranking is consistent across all
+# value ties on a tier, and the property of "Superconsistently
+# acommutative" describes a grammar in which this ranking is
+# consistent across all tiers. If it turns out that partials
+# always rank over wholes or vice versa, across languages, 
+# then the labelling algorithm for every language will either be
+# Whole-seeking or Partial-seeking. 
+# In this implementation, I assume it is only necessarily
+# consistently acommutative. 
+class Grammar:
+    def __init__(self, blocks, side):
+        self.rank = {v: i for i, block in enumerate(blocks) for v in block}
+        self.blocks = blocks
+        self.side = side
+
+    def __call__(self, partial, whole):
+        if partial is None or whole is None:
+            return whole if partial is None else partial
+        if self.rank[partial] != self.rank[whole]:
+            return max(partial, whole, key=self.rank.get)
+        return partial if self.side == "partial" else whole
+
+# checks that every transition rule is conservative, 
+# value-seeking, and associative
+def lawful(tau, values):
+    domain = (None, *values)
+    for x in domain:
+        for y in domain:
+            m = tau(x, y)
+            if m not in (x, y):
+                return False
+            if m is None and (x, y) != (None, None):
+                return False
+            if any(tau(tau(x, y), z) != tau(x, tau(y, z)) for z in domain):
+                return False
     return True
 
-# An evaluator which checks if there exists a possible tau that could have created this MTSM. 
-def eval_tauless(tree):
-    validate_tree(tree)
-    seen = {} # dict of tier, leftval, rightval -> motherval, to enforce independence
-    for i in range(0, len(tree)-1, 2):
-        mother, left, right = tree[i], tree[i+1], tree[i+2]
-        for tier in tier_list:
-            l, r, m = val(left, tier), val(right, tier), val(mother, tier)
-            if m != l and m != r: 
-                return False # check conservation
-            if seen.setdefault((tier, l, r), m) != m: 
-                return False # check independence
-    return True
+# lists every possible way to rank the values of a tier incl. ties
+def ordered_partitions(items):
+    if not items:
+        yield []
+        return
+    for k in range(1, len(items) + 1):
+        for block in itertools.combinations(items, k):
+            rest = [x for x in items if x not in block]
+            for tail in ordered_partitions(rest):
+                yield [block, *tail]
 
-# An example tau, which first checks a person feature hierarchy, and then defaults to the left node's feature unless it's unvalued. (This tau is associative.)
-person_hierarchy = {'1': 0, '2': 1, '3': 2}
-def tau(left, right):
-    mother = snode(left, right)
-    for t in tier_list:
-        l, r = val(left, t), val(right, t)
-        if l is None or r is None:
-            mother.vals[t] = r if l is None else l
-        elif t == 'person' and person_hierarchy[r] < person_hierarchy[l]:
-            mother.vals[t] = r
-        else: 
-            mother.vals[t] = l
-    return mother
+# then expands tied values to partial>whole and whole>partial
+def grammars(values):
+    for blocks in ordered_partitions(sorted(values)):
+        sides = ("partial", "whole") if any(len(b) > 1 for b in blocks) else ("partial",)
+        for side in sides:
+            tau = Grammar(blocks, side)
+            if lawful(tau, values):
+                yield tau
 
-# A given tree with values is generatable by an MTSM with a conservative and independent transition function tau iff there exists a tree and an initialization of left-node values which produces the output stream via tau. 
+# runs one tier of one grammar over the tree
+def derive(tree, tier, tau):
+    head, bars = {}, {}
 
-#############
-# Other notes:
-    # The current MTSM mandates the following properties of the transition function tau:
-        # 1. conservation: for each tier, the mother value is one of the daughter values.
-        # 2. independence: for each ordered pair of daughter values, there is only one possible mother value.
+    # bottom-up labelling pass:
+        # first recursively labels everything lower
+        # when labelling, first labels nodes with their lexical features
+        # then merges the complement's label
+        # then merges the result with each specifier in turn,
+        # going from innermost to outermost specifier
+    def label(ph):
+        for d in ph.daughters():
+            label(d)
+        head[ph] = ph.head.lexical.get(tier)
+        chain = [tau(head[ph], bars[ph.complement][-1] if ph.complement else None)]
+        head[ph] = chain[-1]
+        for spec in ph.specifiers:
+            chain.append(tau(chain[-1], bars[spec][-1]))
+            head[ph] = chain[-1]
+        bars[ph] = chain
+        if ph.phase:
+            share(ph)
 
-    # Other properties which the current MTSM doesn't mandate but which might be true:
-        # 3. associativity: tau(tau(left, right), third) = tau(left, tau(right, third)).
-        # 4. propensity for valuedness: if at least one daughter is valued for a feature, the mother cannot be unvalued for that feature. 
+    # how each daughter receives value from mother in mother-sharing
+    def inherit(value, ph):
+        if bars[ph][-1] is None and value is not None:
+            bars[ph][-1] = value
+            if head[ph] is None:
+                head[ph] = value
+        if not ph.phase:
+            share(ph)
 
-    # Dependency trees kind of assume by default that head features overpower specifier features, whereas constituency trees kind of make the opposite assumption, if you assume that everything overtakes the last thing. 
+    # mother-sharing/top-down pass
+    def share(ph):
+        chain = bars[ph]
+        for i in range(len(chain) - 1, 0, -1):
+            if chain[i - 1] is None:
+                chain[i - 1] = chain[i]
+            inherit(chain[i], ph.specifiers[i - 1])
+        if head[ph] is None:
+            head[ph] = chain[0]
+        if ph.complement is not None:
+            inherit(chain[0], ph.complement)
+        for adjunct in ph.adjuncts:
+            inherit(chain[-1], adjunct)
 
-    # Hierarchies are probably universal, but which parts of them are actualized might not be -- e.g. maybe in some languages, 2=3 and 1>both, but in other languages 1=2 and both>3.
+    label(tree)
+    if not tree.phase:
+        share(tree)
+    return {ph.head: head[ph] for ph in tree.phrases()}
 
-    # The current MTSM is more restrictive than OTSL for two reasons, both underspecified in OTSL:
-        # 1. The OTSL tier projection function can potentially condition on any of the current node's features. For example, in TSL syntax, Kenneth often uses this as a tool to project determiners to an agreement tier depending on their case or EPP features. 
-        # 2. The OTSL tier projection function can potentially condition on any of the last-projected-node's features (it's unclear). 
+# collect all consistent grammars, find mandated rules, 
+def check_tier(tree, tier):
+    heads = [ph.head for ph in tree.phrases()]
+    values = {h.lexical.get(tier) for h in heads} | {h.observed[tier] for h in heads if tier in h.observed}
+    values.discard(None)
+    targets = [h for h in heads if tier in h.observed]
+    passing, possible, total = [], {id(h): set() for h in targets}, 0
+    for tau in grammars(values):
+        total += 1
+        surface = derive(tree, tier, tau)
+        for h in targets:
+            possible[id(h)].add(surface[h])
+        if all(surface[h] == h.observed[tier] for h in targets):
+            passing.append(tau)
+    pairs = [(p, w) for p in sorted(values) for w in sorted(values) if p != w]
+    mandated = [(p, w, passing[0](p, w)) for p in sorted(values) for w in sorted(values)
+                if p != w and passing and len({tau(p, w) for tau in passing}) == 1]
+    blocked = [(h, sorted(possible[id(h)], key=str)) for h in targets
+               if h.observed[tier] not in possible[id(h)]]
+    return passing, total, mandated, len(pairs), blocked
 
-        # Crucially, this is because of the MTSM's property of Independence, which prevents different tiers from influencing each other. 
 
-        # Without Independence, the MTSM could be equivalent to OTSL. 
+def show(value):
+    return "unvalued" if value is None else value
 
-        # However, it's important to note that this would fix (2) but not fully (1). OTSL and the MTSM can both condition on nodes below them, and this is fine, because those nodes' feature values have already been decided (i.e., do not condition on anything above them). But once you allow for conditioning on different features of your own node, you need to enforce a strict ordering *between* tiers/feature types. 
 
-        # Otherwise, you will have both nodes that condition on features below them, AND nodes that condition on features above them, and this could get quite complex, and doesn't seem like something language would do. 
+def report(text):
+    tree = parse(text)
+    tiers = sorted({t for ph in tree.phrases() for t in ph.head.lexical})
+    if not tiers:
+        return "No features on any head, so there is nothing to check."
+    lines, ok = [], True
+    for tier in tiers:
+        passing, total, mandated, pairs, blocked = check_tier(tree, tier)
+        if passing:
+            lines.append(f"{tier}: passes ({len(passing)} of {total} lawful transition functions derive it)")
+            for p, w, m in mandated:
+                lines.append(f"  mandated: tau(partial={p}, whole={w}) = {m}")
+            if not mandated and pairs:
+                lines.append("  no transition rules are mandated")
+        else:
+            ok = False
+            lines.append(f"{tier}: FAILS (none of {total} lawful transition functions derive it)")
+            for h, values in blocked:
+                lines.append(f"  {h.name} never surfaces as {show(h.observed[tier])}; it can only surface as "
+                             + ", ".join(show(v) for v in values))
+            if not blocked:
+                lines.append("  each observation is derivable on its own, but not all of them together")
+    lines.insert(0, "PASSES" if ok else "FAILS")
+    return "\n".join(lines)
+
+
+def main():
+    if len(sys.argv) > 1:
+        print(report(" ".join(sys.argv[1:])))
+        return
+    while True:
+        try:
+            line = input("tree> ")
+        except EOFError:
+            break
+        if not line.strip():
+            break
+        try:
+            print(report(line))
+        except ValueError as error:
+            print("error:", error)
+        print()
+
+
+if __name__ == "__main__":
+    main()
 \end{minted}

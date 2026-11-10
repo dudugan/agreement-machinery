@@ -293,7 +293,7 @@ def main():
 \maketitle
 \begin{{singlespace}}\tableofcontents\end{{singlespace}}
 {chr(10).join(body)}
-\begin{{singlespace}}\printbibliography[heading=bibintoc]\end{{singlespace}}
+\begin{{singlespace}}\printbibliography[heading=bibintoc,title={{The Bibliography}}]\end{{singlespace}}
 \end{{document}}
 """
     open(os.path.join(BUILD, "thesis.tex"), "w", encoding="utf-8").write(main_tex)

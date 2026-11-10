@@ -40,7 +40,7 @@ const MSYM={
   emptyset:"∅",varnothing:"∅",langle:"⟨",rangle:"⟩",llbracket:"⟦",rrbracket:"⟧",lbrack:"[",rbrack:"]",
   Longleftrightarrow:"⟺",Leftrightarrow:"⇔",leftrightarrow:"↔",longleftrightarrow:"⟷",rightarrow:"→",to:"→",leftarrow:"←",gets:"←",
   Rightarrow:"⇒",Leftarrow:"⇐",Longrightarrow:"⟹",longrightarrow:"⟶",mapsto:"↦",uparrow:"↑",downarrow:"↓",rightsquigarrow:"⇝",
-  times:"×",circ:"∘",cdot:"·",bullet:"•",pm:"±",mp:"∓",neq:"≠",ne:"≠",leq:"≤",le:"≤",geq:"≥",ge:"≥",approx:"≈",sim:"∼",equiv:"≡",
+  times:"×",circ:"∘",bigcirc:"○",cdot:"·",bullet:"•",pm:"±",mp:"∓",neq:"≠",ne:"≠",leq:"≤",le:"≤",geq:"≥",ge:"≥",approx:"≈",sim:"∼",equiv:"≡",
   in:"∈",notin:"∉",ni:"∋",subset:"⊂",supset:"⊃",subseteq:"⊆",supseteq:"⊇",cup:"∪",cap:"∩",setminus:"∖",forall:"∀",exists:"∃",
   neg:"¬",lnot:"¬",wedge:"∧",land:"∧",vee:"∨",lor:"∨",infty:"∞",prime:"′",ast:"∗",star:"⋆",dagger:"†",ddagger:"‡",
   ldots:"…",dots:"…",cdots:"⋯",vdots:"⋮",mid:"∣",vert:"|",Vert:"‖",backslash:"\\",partial:"∂",nabla:"∇",sqcup:"⊔",oplus:"⊕",
@@ -498,6 +498,9 @@ const BUILTIN={
   text: wrap("span"), mbox: wrap("span"), hbox: wrap("span"), makebox: p=>{ p.readOpt(); p.readOpt(); return wrap("span")(p); },
   textfeat: wrap("span","feat"),
   ensuremath: p=>mathToHtml(p.readArg(),p.st,p.ctx),
+  // \includegraphics[width=0.6\linewidth]{images/x.png}: paths are relative to content/
+  includegraphics: p=>{ const o=p.readOpt()||""; const f=p.readArg().trim(); const w=o.match(/width\s*=\s*([\d.]+)\s*\\(?:line|text)width/);
+    return `<img class="graphic" src="content/${esc(f)}" alt=""${w?` style="width:${Math.min(100,parseFloat(w[1])*100)}%"`:""}>`; },
   // \sc{…} as a command, or {\sc …} as a declaration
   sc: p=>{ p.skipWS(); return p.peek()==="{" ? wrap("span","sc")(p) : decl("sc")(p); },
   bf: decl("bf"), it: decl("it"), em: decl("it"), itshape: decl("it"), bfseries: decl("bf"), scshape: decl("sc"), ttfamily: decl("tt"),
@@ -538,6 +541,8 @@ const BUILTIN={
 
   codeblock: p=>{ const c=(p.st.codes||{})[p.readArg().trim()]; if(!c) return "";
     return block(`<div class="codeblock" data-lang="${esc(c.lang)}"><pre class="code-src">${esc(c.code)}</pre></div>`); },
+  tryitbox: p=>{ const c=(p.st.codes||{})[p.readArg().trim()]; if(!c||!c.tryit) return "";
+    return block(`<div class="tryit" data-fn="${esc(c.fn)}" data-example="${esc(c.example)}"><pre class="try-usage">${esc(c.usage)}</pre></div>`); },
   inlinecode: p=>{ const c=(p.st.codes||{})[p.readArg().trim()]; return c?`<code>${esc(c.code)}</code>`:""; },
 
   /* ----- sections ----- */
@@ -693,11 +698,11 @@ function beginEnv(p){
       return block(`<div class="diagram tikz" data-dg="${id}"></div>`); // placed inline-left, as LaTeX would
     }
     case "itemize": case "enumerate": case "description": {
-      p.readOpt(); const raw=p.readEnv(env);
+      const opt=p.readOpt()||""; const start=env==="enumerate"&&(opt.match(/start\s*=\s*(\d+)/)||[])[1]; const raw=p.readEnv(env);
       const items=splitTopCS(raw,"item").slice(1).map(it=>{ let lab=""; const m=it.match(/^\s*\[([^\]]*)\]/); if(m){ lab=convert(m[1],st,p.ctx,"inline"); it=it.slice(m[0].length); }
         return `<li>${lab?`<b>${lab}</b> `:""}${convert(it,st,p.ctx,"auto")}</li>`; }).join("");
       const tag=env==="enumerate"?"ol":"ul";
-      return block(`<${tag} class="list">${items}</${tag}>`);
+      return block(`<${tag} class="list"${start?` start="${start}"`:""}>${items}</${tag}>`);
     }
     case "quote": case "quotation": return block(`<blockquote>${convert(p.readEnv(env),st,p.ctx,"auto")}</blockquote>`);
     case "center": case "flushleft": case "flushright": return block(`<div class="${env}">${convert(p.readEnv(env),st,p.ctx,"auto")}</div>`);
@@ -986,6 +991,9 @@ function extractCode(src, st){
     let L=lang||((opt||"").match(/language\s*=\s*([\w+]+)/i)||[])[1]||"text";
     const id="code"+(++k); st.codes[id]={lang:LANGS[L.toLowerCase()]||L.toLowerCase(), code:dedent(body)};
     return `\\codeblock{${id}}`; });
+  // \begin{tryit}{fn}{example} usage text \end{tryit}: a box where readers type an input for fn() in the next Python block
+  src=src.replace(/\\begin\{tryit\}\{(\w+)\}\{(.*)\}[ \t]*\n([\s\S]*?)\\end\{tryit\}/g,(m,fn,example,usage)=>{
+    const id="code"+(++k); st.codes[id]={tryit:true, fn, example:example.trim(), usage:dedent(usage)}; return `\\tryitbox{${id}}`; });
   src=src.replace(/\\(?:mintinline\{[^}]*\}|lstinline(?:\[[^\]]*\])?)\{([^}]*)\}|\\(?:verb|lstinline)\*?([^a-zA-Z\s{])([\s\S]*?)\2/g,(m,a,d,b)=>{
     const id="code"+(++k); st.codes[id]={inline:true, code:a!==undefined?a:b}; return `\\inlinecode{${id}}`; });
   return src;
@@ -1098,7 +1106,7 @@ function parseBib(src, st){
       case "mastersthesis": html+=`<i>${title}</i>. Master’s thesis, ${T(fields.school)}.`; break;
       default: html+=`${title}.${fields.note?" "+T(fields.note)+".":""}${fields.howpublished?" "+T(fields.howpublished)+".":""}`;
     }
-    out[key]={key, type, short, year, html, sortKey:(names[0]?names[0].last:key).replace(/[{}\\'"`^~]/g,"").toLowerCase()+" "+year};
+    out[key]={key, type, short, year, html, title, sortKey:(names[0]?names[0].last:key).replace(/[{}\\'"`^~]/g,"").toLowerCase()+" "+year};
   }
   return out;
 }

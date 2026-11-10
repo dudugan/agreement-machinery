@@ -531,3 +531,24 @@ body.book > header.top, body.book > .toolbarbar, body.book > .wrap, body.book .s
   .bk-title{padding-top:240px}
   #book .diagram.boxed,#book .abstract,#book code,#book .codeblock{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+/* ---------- the Encyclopedia: summaries of the readings ---------- */
+.readings{list-style:none;margin:0;padding:0}
+.readings li.letter{margin:26px 0 0;font-variant:small-caps;letter-spacing:.1em;color:var(--muted);font-size:15px;border-bottom:1px solid var(--rule)}
+.readings li a{display:block;padding:12px 0;border-bottom:1px solid rgba(216,204,180,.6);text-decoration:none;color:var(--ink);cursor:pointer}
+.readings li a:hover .what{color:var(--accent)}
+.readings .who{font-family:var(--mono);font-size:12px;color:var(--muted);margin-right:10px}
+.readings .what{font-size:18px}
+.readings .gist{display:block;font-size:15.5px;line-height:1.45;color:#5a5144;margin-top:4px}
+.readings .gist.none{font-style:italic;color:var(--faint)}
+.rd-cite{font-size:16px;line-height:1.5;color:#5a5144;border-left:2px solid var(--tan);padding-left:12px;margin:14px 0 26px}
+.rd-cite .xref{white-space:nowrap}
+.bib li .by a.nosum{color:var(--muted);border-bottom-color:var(--muted)}
+img.graphic{display:block;max-width:100%;height:auto;margin:6px auto}
+.tryit{margin:22px 0 24px;border:1px solid #DAD0B9;border-radius:6px;background:#F7F2E6;padding:10px 12px;font-size:15px}
+.tryit .nf-cap code{font-size:12px;text-transform:none;letter-spacing:0}
+.try-in{display:block;width:100%;box-sizing:border-box;font-family:var(--mono);font-size:13px;line-height:1.5;background:#FBF8F0;border:1px solid #DAD0B9;border-radius:4px;color:var(--ink);padding:6px 8px;resize:vertical}
+.try-in:focus{outline:none;border-color:var(--accent)}
+.tryit > .code-out{margin:10px -12px -10px;border-radius:0 0 6px 6px}
+.try-usage{margin:0 0 8px;font-family:var(--mono);font-size:12.5px;line-height:1.5;white-space:pre-wrap;color:#4a4237}
+.tryit + .codeblock{margin-top:-12px}

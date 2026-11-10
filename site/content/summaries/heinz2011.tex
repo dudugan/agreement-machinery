@@ -1,0 +1,75 @@
+% Summary of heinz2011: Tier-based strictly local constraints for phonology
+
+\begin{abstract}
+\begin{enumerate}
+  \item First defines the Tier-based Strictly Local (TSL) class of languages.
+  \item Review properties of this class.
+  \item Hypothesize that All phonotactic processes are TSL.
+\end{enumerate}
+\end{abstract}
+
+\section*{motivation}
+
+The TSL class is motivated by tiered phenomena in phonology, which have been studied for a long time and have existing computational formalizations and learning algorithms. However, their formal language properties have not been explored.
+
+\section*{properties of TSL}
+
+\begin{itemize}
+  \item TSL contains the Strictly Local class of languages
+  \item TSL languages are all Star-free
+  \item TSL languages are not contained by the Locally Threshold-Testable or Piecewise Testable classes.
+  \item TSL languages are closed under suffix and prefix.
+  \item TSL languages are string extension classes, meaning they are:
+  \begin{itemize}
+    \item closed under intersection
+    \item efficiently learnable from positive data (with a known tier)
+  \end{itemize}
+\end{itemize}
+
+\section*{definition of TSL}
+
+An SL-\textit{k} language L can be defined as (Sigma, S, K) where:
+
+\begin{itemize}
+  \item Sigma is a finite alphabet
+  \item S is a set of forbidden factors of length \textit{k}, from Sigma*
+  \item L contains all strings in Sigma* which don't contain any factor in S
+\end{itemize}
+
+A TSL-\textit{k} language L can be defined as (Sigma, T, S, \textit{k}) where:
+
+\begin{itemize}
+  \item Sigma is a finite alphabet
+  \item T is a subset of Sigma
+  \item S is a set of forbidden factors of length \textit{k}, from T*
+  \item L contains all strings in Sigma* which, when you remove all symbols not in T from the string, don't contain any factor in S
+\end{itemize}
+
+\section*{hypothesis}
+
+All humanly possible segmental phonotactic patterns are TSL.
+
+Three classes of phonotactic constraints:
+
+\begin{enumerate}
+  \item Local segmental patterns (SL)
+  \item Long-distance segmental patterns (consonant harmony, disharmony, vowel harmony)
+  \item Stress patterns
+\end{enumerate}
+
+Three kinds of vowel harmony patterns:
+
+\begin{enumerate}
+  \item Without neutral vowels
+  \begin{enumerate}
+    \item analyze same as assimilatory consonant harmony
+  \end{enumerate}
+  \item With opaque vowels (which don't harmonize, but begin their own harmony domain)
+  \begin{enumerate}
+    \item analyze by allowing Xi but not iX on the tier, if the opaque vowel is \textit{i}
+  \end{enumerate}
+  \item With transparent vowels (which don't harmonize or begin their own domain)
+  \begin{enumerate}
+    \item analyze by removing these from the tier
+  \end{enumerate}
+\end{enumerate}

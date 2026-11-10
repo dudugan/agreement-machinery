@@ -16,9 +16,10 @@ Then open http://localhost:8765. The page has to be served over http; opening `i
 | --- | --- |
 | `content/manifest.json` | reading order (parts → pages), the list of phenomena, the categories, and the names of the feature symbols. Each part is a chapter of the thesis and each page a section of it, numbered like 2.3 |
 | `content/macros.tex` | your preamble. Every `\newcommand` here is expanded exactly as LaTeX would, and macros in this file override the site's built-ins |
-| `content/refs.bib` | the bibliography (natbib-style `\citet`, `\citep`, `\citealt`, `\citeyear`, …) |
+| `content/refs.bib` | The Bibliography (natbib-style `\citet`, `\citep`, `\citealt`, `\citeyear`, …) |
+| `content/summaries/<key>.tex` | The Encyclopedia: your summary of each reading in `refs.bib`, one file per bib key. A missing or empty file shows as "no summary yet". Put the TL;DR in `\begin{abstract}…\end{abstract}`; images go in `content/images/` and are included with `\includegraphics[width=0.6\linewidth]{images/…}` |
 | `content/chapters/*.tex` | one file per page (a section in the PDF) |
-| `content/phenomena/*.tex` | one file per Encyclopedia entry |
+| `content/phenomena/*.tex` | one file per entry of the old, archived encyclopedia (hidden from the site) |
 
 ## Metadata blocks
 
